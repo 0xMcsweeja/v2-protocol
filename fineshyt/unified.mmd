@@ -1,0 +1,263 @@
+graph TB
+    %% Styling
+    classDef coreContract fill:#4169E1,stroke:#000,stroke-width:3px,color:#fff
+    classDef marketContract fill:#228B22,stroke:#000,stroke-width:2px,color:#fff
+    classDef hooksContract fill:#FF8C00,stroke:#000,stroke-width:2px,color:#fff
+    classDef sanctionsContract fill:#DC143C,stroke:#000,stroke-width:2px,color:#fff
+    classDef interface fill:#FFD700,stroke:#000,stroke-width:1px,color:#000
+    classDef externalActor fill:#C0C0C0,stroke:#000,stroke-width:2px,color:#000
+    classDef dataStore fill:#87CEEB,stroke:#000,stroke-width:2px,color:#000
+    classDef library fill:#DDA0DD,stroke:#000,stroke-width:2px,color:#000
+    classDef lens fill:#20B2AA,stroke:#000,stroke-width:2px,color:#000
+    classDef security fill:#9370DB,stroke:#000,stroke-width:2px,color:#fff
+    classDef utility fill:#FF69B4,stroke:#000,stroke-width:2px,color:#fff
+    
+    %% External Actors
+    ProtocolOwner((Protocol Owner<br/><br/>Multisig/DAO controlling protocol governance<br/><br/>Registry management<br/>Template approval<br/>Fee configuration)):::externalActor
+    Borrower((Registered Borrower<br/><br/>Market deployment and parameter management<br/><br/>rescueTokens<br/>forceBuyBack<br/>borrow<br/>repay<br/>Emergency operations)):::externalActor
+    Lender((Authorized Lender<br/><br/>Provides liquidity to markets<br/><br/>deposit<br/>withdraw<br/>transfer<br/>pullProviderCredential)):::externalActor
+    RoleProvider((Credential Provider<br/><br/>External authorization service<br/><br/>validateCredential<br/>grantRole<br/>TTL management)):::externalActor
+    FeeRecipient((Fee Recipient<br/><br/>Protocol and origination fee collection<br/><br/>collectFees)):::externalActor
+    ChainalysisOracle((Chainalysis Oracle<br/><br/>Real-time sanctions screening service<br/><br/>isSanctioned)):::externalActor
+    SphereXEngine((SphereX Engine<br/><br/>MEV protection and transaction monitoring<br/><br/>sphereXValidatePre<br/>sphereXValidatePost)):::externalActor
+    
+    %% Core Protocol Contracts
+    WildcatArchController[WildcatArchController.sol<br/><br/>Central registry for protocol governance<br/><br/>registerBorrower<br/>removeBorrower<br/>registerControllerFactory<br/>registerController<br/>registerMarket<br/>blacklistAsset<br/>removeAssetBlacklist<br/>setProtocolFeeConfiguration<br/>getRegisteredBorrowers<br/>getRegisteredMarkets<br/>protocolFeeConfiguration<br/>sphereXEngineSingleton]:::coreContract
+    
+    HooksFactory[HooksFactory.sol<br/><br/>Factory for hooks deployment and market creation<br/><br/>addHooksTemplate<br/>disableHooksTemplate<br/>deployHooksInstance<br/>deployMarket<br/>computeHooksAddress<br/>getHooksTemplateDetails<br/>getMarketsForHooksTemplate<br/>setProtocolFeeForOriginationFeeAsset<br/>pushProtocolFeeUpdate<br/>hooksTemplates<br/>deployedMarkets<br/>marketCountForBorrower]:::coreContract
+    
+    %% Market Contract System
+    WildcatMarket[WildcatMarket.sol<br/><br/>Main market contract for lending operations<br/><br/>updateState<br/>deposit<br/>borrow<br/>repay<br/>rescueTokens<br/>forceBuyBack<br/>closeMarket<br/>collectFees<br/>asset<br/>borrower<br/>hooks<br/>feeRecipient<br/>protocolFeeBips<br/>state]:::marketContract
+    
+    WildcatMarketBase[WildcatMarketBase.sol<br/><br/>Core market logic and state management<br/><br/>_getUpdatedState<br/>_writeState<br/>currentState<br/>previousState<br/>scaledTotalSupply<br/>scaledBalanceOf<br/>scaleFactor<br/>liquidityRequired<br/>coverageLiquidity<br/>borrowableAssets<br/>totalDebts<br/>accruedProtocolFees<br/>withdrawableProtocolFees<br/>_accounts<br/>_accountsArray]:::marketContract
+    
+    WildcatMarketConfig[WildcatMarketConfig.sol<br/><br/>Market parameter management and borrower controls<br/><br/>setAnnualInterestBips<br/>setReserveRatioBips<br/>setMaxTotalSupply<br/>setAnnualInterestAndReserveRatioBips<br/>nukeFromOrbit<br/>updateAccountAuthorization<br/>maximumDeposit]:::marketContract
+    
+    WildcatMarketToken[WildcatMarketToken.sol<br/><br/>ERC20 implementation for market shares<br/><br/>balanceOf<br/>totalSupply<br/>transfer<br/>transferFrom<br/>approve<br/>_getAccountWithRole<br/>_transfer<br/>_scaledBalances<br/>_allowances<br/>Account]:::marketContract
+    
+    WildcatMarketWithdrawals[WildcatMarketWithdrawals.sol<br/><br/>Withdrawal queue and batch processing system<br/><br/>queueWithdrawal<br/>executeWithdrawal<br/>processUnpaidWithdrawalBatch<br/>getWithdrawalBatch<br/>getAccountWithdrawalStatus<br/>getAvailableWithdrawalAmount<br/>getUnpaidBatchExpiries<br/>_withdrawalData<br/>_withdrawalBatches]:::marketContract
+    
+    %% Hooks System
+    AccessControlHooks[AccessControlHooks.sol<br/><br/>Lender authorization and role management system<br/><br/>onDeposit<br/>onQueueWithdrawal<br/>onTransfer<br/>onBorrow<br/>onRepay<br/>onSetAnnualInterestBips<br/>addRoleProvider<br/>removeRoleProvider<br/>blockFromDeposits<br/>unblockFromDeposits<br/>grantRole<br/>grantRoles<br/>revokeRole<br/>pullProviderCredential<br/>validateCredential<br/>_roleProviders<br/>_lenderStatus<br/>_pullProviders]:::hooksContract
+    
+    MarketConstraintHooks[MarketConstraintHooks.sol<br/><br/>Market parameter validation and constraint enforcement<br/><br/>onSetAnnualInterestBips<br/>onSetReserveRatioBips<br/>onSetMaxTotalSupply<br/>setTemporaryReserveRatio<br/>constraints<br/>_temporaryReserveRatio]:::hooksContract
+    
+    FixedTermLoanHooks[FixedTermLoanHooks.sol<br/><br/>Fixed-term loan management and restrictions<br/><br/>onCreateMarket<br/>onQueueWithdrawal<br/>onSetAnnualInterestBips<br/>setFixedTermEndTime<br/>setMinimumDeposit<br/>addRoleProvider<br/>removeRoleProvider<br/>blockFromDeposits<br/>unblockFromDeposits<br/>grantRole<br/>revokeRole<br/>fixedTermEndTime<br/>minimumDeposit<br/>canReduceFixedTerm]:::hooksContract
+    
+    %% Sanctions System
+    WildcatSanctionsSentinel[WildcatSanctionsSentinel.sol<br/><br/>Real-time sanctions monitoring and override management<br/><br/>isSanctioned<br/>overrideSanction<br/>removeSanctionOverride<br/>createEscrow<br/>getEscrowAddress<br/>_chainalysisSanctionsList<br/>_sanctionOverrides<br/>_escrowContracts]:::sanctionsContract
+    
+    WildcatSanctionsEscrow[WildcatSanctionsEscrow.sol<br/><br/>Asset custody for sanctioned addresses<br/><br/>releaseEscrow<br/>escrowedAsset<br/>escrowedAmount<br/>canReleaseEscrow<br/>balance<br/>account<br/>borrower<br/>asset<br/>sentinel]:::sanctionsContract
+    
+    %% Security System
+    SphereXProtectedRegisteredBase[SphereXProtectedRegisteredBase.sol<br/><br/>Base contract for SphereX MEV protection<br/><br/>sphereXValidatePre<br/>sphereXValidatePost<br/>_addProtectedFunction<br/>_sphereXEngine<br/>_registeredProtectedFunctions]:::security
+    
+    SphereXConfig[SphereXConfig.sol<br/><br/>SphereX engine configuration management<br/><br/>changeSphereXEngine<br/>addAllowedSenderOnEngine<br/>removeAllowedSenderOnEngine<br/>sphereXEngine]:::security
+    
+    %% Libraries
+    MarketStateLib[MarketState.sol<br/><br/>Market state calculations and interest accrual<br/><br/>totalAssets<br/>liquidityRequired<br/>normalizeAmount<br/>scaleAmount<br/>maximumDeposit<br/>applyProtocolFee<br/>updateScaleFactorAndFees<br/>processExpiredBatch]:::library
+    
+    FeeMathLib[FeeMath.sol<br/><br/>Fixed-point arithmetic and fee calculations<br/><br/>calculateLinearInterestFromBips<br/>applyWithdrawalBatchPayment<br/>mulDivUp<br/>mulDivDown<br/>bipToRay<br/>rayToWad]:::library
+    
+    WithdrawalLib[Withdrawal.sol<br/><br/>Withdrawal batch processing and manipulation<br/><br/>scaledOwedAmount<br/>availableWithdrawalAmount<br/>createWithdrawal<br/>processWithdrawal]:::library
+    
+    LibStoredInitCode[LibStoredInitCode.sol<br/><br/>CREATE2 deployment utilities<br/><br/>create2WithStoredInitCode<br/>calculateCreate2Address<br/>deployInitCode<br/>getInitCodeHash]:::library
+    
+    MathUtils[MathUtils.sol<br/><br/>Safe arithmetic and percentage calculations<br/><br/>mulDiv<br/>min<br/>max<br/>satSub]:::library
+    
+    SafeCastLib[SafeCastLib.sol<br/><br/>Safe type casting utilities<br/><br/>toUint128<br/>toUint104<br/>toUint32<br/>toUint16]:::library
+    
+    LibERC20[LibERC20.sol<br/><br/>Safe ERC20 operations and token rescue<br/><br/>safeTransfer<br/>safeTransferFrom<br/>safeTransferAll<br/>balanceOf<br/>allowance]:::library
+    
+    BoolUtils[BoolUtils.sol<br/><br/>Boolean operation utilities<br/><br/>and<br/>or<br/>not]:::library
+    
+    StringQuery[StringQuery.sol<br/><br/>String manipulation and query utilities<br/><br/>query functions]:::library
+    
+    %% Utility Contracts
+    ReentrancyGuard[ReentrancyGuard.sol<br/><br/>Cross-function reentrancy protection<br/><br/>nonReentrant<br/>nonReentrantView<br/>_reentrancyGuardEntered]:::utility
+    
+    FunctionTypeCasts[FunctionTypeCasts.sol<br/><br/>Function pointer casting and assembly conversions<br/><br/>function pointer utilities]:::utility
+    
+    FIFOQueue[FIFOQueue.sol<br/><br/>First-in-first-out queue implementation<br/><br/>push<br/>pop<br/>peek]:::utility
+    
+    %% Types & Data Structures
+    HooksConfig[HooksConfig.sol<br/><br/>Hook configuration flags and settings<br/><br/>useOnDeposit<br/>useOnQueueWithdrawal<br/>useOnExecuteWithdrawal<br/>useOnTransfer<br/>useOnBorrow<br/>useOnRepay<br/>useOnSetAnnualInterestBips<br/>useOnSetReserveRatioBips<br/>useOnSetMaxTotalSupply<br/>useOnCloseMarket<br/>useOnNukeFromOrbit]:::dataStore
+    
+    LenderStatus[LenderStatus.sol<br/><br/>Lender authorization status tracking<br/><br/>isApproved<br/>lastProvider<br/>lastApprovalTimestamp<br/>canRefresh]:::dataStore
+    
+    RoleProviderType[RoleProvider.sol<br/><br/>Role provider configuration and state<br/><br/>isActive<br/>timeToLive<br/>pullProviderIndex<br/>canRefresh]:::dataStore
+    
+    TransientBytesArray[TransientBytesArray.sol<br/><br/>Transient storage array implementation<br/><br/>assembly operations]:::dataStore
+    
+    %% Lens & Data Access
+    MarketLens[MarketLens.sol<br/><br/>Read-only data aggregation and query interface<br/><br/>getMarketsForBorrower<br/>getMarketsForHooksTemplate<br/>getMarketData<br/>getLenderData<br/>getWithdrawalBatchesData<br/>getHooksTemplateDetails<br/>getMultipleMarketData]:::lens
+    
+    HooksDataStructs[Lens Data Structures<br/><br/>Data structure definitions for lens queries<br/><br/>MarketData<br/>LenderAccountData<br/>WithdrawalBatchData<br/>TokenData<br/>HooksTemplateData<br/>HooksInstanceData<br/>HooksConfigData<br/>RoleProviderData]:::lens
+    
+    %% Interfaces
+    IWildcatArchController[IWildcatArchController.sol<br/><br/>Arch controller interface definition<br/><br/>registerBorrower<br/>removeBorrower<br/>registerMarket<br/>blacklistAsset<br/>setProtocolFeeConfiguration]:::interface
+    
+    IHooksFactory[IHooksFactory.sol<br/><br/>Hooks factory interface definition<br/><br/>addHooksTemplate<br/>deployHooksInstance<br/>deployMarket<br/>getHooksTemplateDetails]:::interface
+    
+    IHooks[IHooks.sol<br/><br/>Complete hooks interface with all lifecycle methods<br/><br/>onCreateMarket<br/>onDeposit<br/>onQueueWithdrawal<br/>onExecuteWithdrawal<br/>onTransfer<br/>onBorrow<br/>onRepay<br/>onSetAnnualInterestBips<br/>onSetReserveRatioBips<br/>onSetMaxTotalSupply<br/>onCloseMarket<br/>onNukeFromOrbit<br/>version<br/>config]:::interface
+    
+    IMarketEventsAndErrors[IMarketEventsAndErrors.sol<br/><br/>Market events and error definitions<br/><br/>deposit events<br/>withdrawal events<br/>borrow events<br/>repay events<br/>state change events<br/>error definitions]:::interface
+    
+    IRoleProvider[IRoleProvider.sol<br/><br/>Role provider interface for credential management<br/><br/>isPullProvider<br/>getCredential<br/>validateCredential]:::interface
+    
+    IWildcatSanctionsSentinel[IWildcatSanctionsSentinel.sol<br/><br/>Sanctions sentinel interface<br/><br/>isSanctioned<br/>overrideSanction<br/>createEscrow]:::interface
+    
+    IWildcatSanctionsEscrow[IWildcatSanctionsEscrow.sol<br/><br/>Sanctions escrow interface<br/><br/>releaseEscrow<br/>canReleaseEscrow]:::interface
+    
+    IERC20[IERC20.sol<br/><br/>Standard ERC20 token interface<br/><br/>transfer<br/>transferFrom<br/>approve<br/>allowance<br/>totalSupply<br/>balanceOf]:::interface
+    
+    IChainalysisSanctionsList[IChainalysisSanctionsList.sol<br/><br/>External Chainalysis oracle interface<br/><br/>isSanctioned]:::interface
+    
+    ISphereXEngine[ISphereXEngine.sol<br/><br/>SphereX protection engine interface<br/><br/>sphereXValidatePre<br/>sphereXValidatePost<br/>addAllowedSender]:::interface
+    
+    %% Error Libraries
+    Errors[Errors.sol<br/><br/>Custom error definitions for protocol<br/><br/>authorization errors<br/>validation errors<br/>hook errors]:::utility
+    
+    MarketErrors[MarketErrors.sol<br/><br/>Market-specific error definitions<br/><br/>state validation errors<br/>parameter errors<br/>operation errors]:::utility
+    
+    MarketEvents[MarketEvents.sol<br/><br/>Market operation event definitions<br/><br/>deposit events<br/>withdrawal events<br/>state change events<br/>parameter update events]:::utility
+    
+    %% === COMPREHENSIVE FLOWS ===
+    
+    %% 1. OWNERSHIP & PERMISSIONS
+    ProtocolOwner ==>|owns & controls| WildcatArchController
+    ProtocolOwner -->|registerBorrower| WildcatArchController
+    ProtocolOwner -->|addHooksTemplate| HooksFactory
+    ProtocolOwner -->|setProtocolFeeConfiguration| WildcatArchController
+    ProtocolOwner -->|blacklistAsset| WildcatArchController
+    
+    %% 2. BORROWER OPERATIONS (ALL FUNCTIONS)
+    Borrower ==>|deployHooksInstance| HooksFactory
+    Borrower ==>|deployMarket| HooksFactory
+    Borrower -->|borrow| WildcatMarket
+    Borrower -->|repay| WildcatMarket
+    Borrower -->|rescueTokens| WildcatMarket
+    Borrower -->|forceBuyBack| WildcatMarket
+    Borrower -->|closeMarket| WildcatMarket
+    Borrower -->|collectFees| WildcatMarket
+    Borrower -->|setAnnualInterestBips| WildcatMarketConfig
+    Borrower -->|setReserveRatioBips| WildcatMarketConfig
+    Borrower -->|setMaxTotalSupply| WildcatMarketConfig
+    Borrower -->|nukeFromOrbit| WildcatMarketConfig
+    Borrower -->|addRoleProvider| AccessControlHooks
+    Borrower -->|removeRoleProvider| AccessControlHooks
+    Borrower -->|blockFromDeposits| AccessControlHooks
+    Borrower -->|unblockFromDeposits| AccessControlHooks
+    Borrower -->|setFixedTermEndTime| FixedTermLoanHooks
+    Borrower -->|setMinimumDeposit| FixedTermLoanHooks
+    Borrower -->|overrideSanction| WildcatSanctionsSentinel
+    
+    %% 3. LENDER OPERATIONS (ALL FUNCTIONS)
+    Lender -->|pullProviderCredential| AccessControlHooks
+    RoleProvider -->|grantRole| AccessControlHooks
+    RoleProvider -->|validateCredential| AccessControlHooks
+    Lender ==>|deposit| WildcatMarket
+    Lender ==>|queueWithdrawal| WildcatMarketWithdrawals
+    Lender -->|executeWithdrawal| WildcatMarketWithdrawals
+    Lender -->|transfer| WildcatMarketToken
+    Lender -->|approve| WildcatMarketToken
+    
+    %% 4. FEE OPERATIONS
+    FeeRecipient -->|collectFees| WildcatMarket
+    HooksFactory -->|originationFees| FeeRecipient
+    WildcatMarket -->|protocolFees| FeeRecipient
+    
+    %% 5. FACTORY DEPLOYMENT FLOWS
+    HooksFactory -->|checkRegistration| WildcatArchController
+    HooksFactory ==>|deployHooksInstance| AccessControlHooks
+    HooksFactory ==>|deployHooksInstance| MarketConstraintHooks
+    HooksFactory ==>|deployHooksInstance| FixedTermLoanHooks
+    HooksFactory ==>|deployMarket| WildcatMarket
+    HooksFactory -->|registerMarket| WildcatArchController
+    
+    %% 6. MARKET INHERITANCE & COMPOSITION
+    WildcatMarket -.->|inherits| WildcatMarketBase
+    WildcatMarket -.->|inherits| WildcatMarketConfig
+    WildcatMarket -.->|inherits| WildcatMarketToken
+    WildcatMarket -.->|inherits| WildcatMarketWithdrawals
+    WildcatMarket -.->|inherits| ReentrancyGuard
+    WildcatMarketBase -.->|inherits| SphereXProtectedRegisteredBase
+    HooksFactory -.->|inherits| SphereXProtectedRegisteredBase
+    
+    %% 7. INTERFACE IMPLEMENTATIONS
+    WildcatArchController -.->|implements| IWildcatArchController
+    HooksFactory -.->|implements| IHooksFactory
+    AccessControlHooks -.->|implements| IHooks
+    MarketConstraintHooks -.->|implements| IHooks
+    FixedTermLoanHooks -.->|implements| IHooks
+    WildcatMarket -.->|implements| IMarketEventsAndErrors
+    WildcatSanctionsSentinel -.->|implements| IWildcatSanctionsSentinel
+    WildcatSanctionsEscrow -.->|implements| IWildcatSanctionsEscrow
+    RoleProvider -.->|implements| IRoleProvider
+    
+    %% 8. COMPREHENSIVE LIBRARY USAGE
+    WildcatMarketBase ==>|uses extensively| MarketStateLib
+    WildcatMarketBase ==>|uses| FeeMathLib
+    WildcatMarketBase ==>|uses| SafeCastLib
+    WildcatMarketBase ==>|uses| MathUtils
+    WildcatMarketWithdrawals ==>|uses extensively| WithdrawalLib
+    WildcatMarket ==>|uses| LibERC20
+    WildcatMarket ==>|uses| BoolUtils
+    HooksFactory ==>|uses| LibStoredInitCode
+    AccessControlHooks ==>|uses| StringQuery
+    WildcatMarket ==>|uses| MarketErrors
+    WildcatMarket ==>|uses| MarketEvents
+    AccessControlHooks ==>|uses| Errors
+    
+    %% 9. TYPE & DATA STRUCTURE USAGE
+    WildcatMarket ==>|uses| HooksConfig
+    AccessControlHooks ==>|uses| LenderStatus
+    AccessControlHooks ==>|uses| RoleProviderType
+    HooksFactory ==>|uses| TransientBytesArray
+    
+    %% 10. HOOKS INTERACTION FLOWS (ALL HOOKS)
+    WildcatMarket ==>|onDeposit| AccessControlHooks
+    WildcatMarket ==>|onQueueWithdrawal| AccessControlHooks
+    WildcatMarket ==>|onExecuteWithdrawal| AccessControlHooks
+    WildcatMarket ==>|onTransfer| AccessControlHooks
+    WildcatMarket ==>|onBorrow| AccessControlHooks
+    WildcatMarket ==>|onRepay| AccessControlHooks
+    WildcatMarket ==>|onSetAnnualInterestBips| MarketConstraintHooks
+    WildcatMarket ==>|onSetReserveRatioBips| MarketConstraintHooks
+    WildcatMarket ==>|onSetMaxTotalSupply| MarketConstraintHooks
+    WildcatMarket ==>|onCloseMarket| AccessControlHooks
+    WildcatMarket ==>|onNukeFromOrbit| AccessControlHooks
+    FixedTermLoanHooks ==>|termProtection| MarketConstraintHooks
+    
+    %% 11. SANCTIONS FLOWS (ALL FUNCTIONS)
+    WildcatMarket -->|checkSanctions| WildcatSanctionsSentinel
+    AccessControlHooks -->|checkSanctions| WildcatSanctionsSentinel
+    WildcatSanctionsSentinel -->|querySanctions| ChainalysisOracle
+    WildcatSanctionsSentinel ==>|createEscrow| WildcatSanctionsEscrow
+    Borrower -->|overrideSanction| WildcatSanctionsSentinel
+    Borrower -->|releaseEscrow| WildcatSanctionsEscrow
+    
+    %% 12. SECURITY FLOWS (SPHEREX)
+    SphereXEngine ==>|protects| WildcatMarket
+    SphereXEngine ==>|protects| HooksFactory
+    SphereXProtectedRegisteredBase -->|validates| SphereXEngine
+    SphereXConfig -->|configures| SphereXEngine
+    
+    %% 13. DATA ACCESS FLOWS (LENS)
+    MarketLens -->|reads| WildcatMarket
+    MarketLens -->|reads| HooksFactory
+    MarketLens -->|reads| WildcatArchController
+    MarketLens -->|reads| AccessControlHooks
+    MarketLens ==>|returns| HooksDataStructs
+    
+    %% 14. STATE MANAGEMENT FLOWS
+    WildcatMarketBase ==>|updateState| WildcatMarket
+    WildcatMarketBase ==>|updateScaleFactor| WildcatMarketToken
+    WildcatMarketBase ==>|processUnpaidBatches| WildcatMarketWithdrawals
+    WildcatMarket ==>|updateAccountAuthorization| WildcatMarketConfig
+    
+    %% 15. EXTERNAL INTEGRATIONS
+    IRoleProvider -.->|interface for| RoleProvider
+    IChainalysisSanctionsList -.->|interface for| ChainalysisOracle
+    ISphereXEngine -.->|interface for| SphereXEngine
+    IERC20 -.->|standard for| WildcatMarketToken

@@ -1,0 +1,138 @@
+stateDiagram-v2
+    [*] --> TemplateCreated : Hooks Template Added
+
+    TemplateCreated --> HooksDeployed : deployHooksInstance()
+    HooksDeployed --> MarketDeployed : deployMarket()
+    MarketDeployed --> Active : First Deposit
+
+    Active --> Delinquent : Reserve Ratio Breached
+    Active --> ClosedByBorrower : closeMarket()
+    Active --> ClosedByHooks : onCloseMarket() rejection
+
+    Delinquent --> GracePeriodTracking : Grace Period Active
+    Delinquent --> Active : Borrower Repays
+
+    GracePeriodTracking --> DelinquencyFeesAccruing : Grace Period Exceeded
+    GracePeriodTracking --> Active : Borrower Repays
+
+    DelinquencyFeesAccruing --> Active : Borrower Repays
+    DelinquencyFeesAccruing --> ClosedByBorrower : closeMarket()
+
+    ClosedByBorrower --> AllWithdrawalsProcessed : Final Withdrawals
+    AllWithdrawalsProcessed --> Terminated : Zero Outstanding Debt
+    Terminated --> [*]
+
+    state Active {
+        [*] --> NormalOperation
+        NormalOperation --> WithdrawalBatchPending : queueWithdrawal()
+        WithdrawalBatchPending --> WithdrawalBatchExpired : Batch Duration Elapsed
+        WithdrawalBatchExpired --> NormalOperation : executeWithdrawal()
+        
+        NormalOperation --> ParameterUpdate : Configuration Change
+        ParameterUpdate --> NormalOperation : Hooks Validation Passed
+        ParameterUpdate --> NormalOperation : Update Applied
+        
+        NormalOperation --> BorrowingOperation : borrow() / repay()
+        BorrowingOperation --> NormalOperation : Operation Complete
+        
+        NormalOperation --> EmergencyOperation : Emergency Function Called
+        EmergencyOperation --> NormalOperation : Emergency Resolved
+        
+        NormalOperation --> FeeCollection : collectFees()
+        FeeCollection --> NormalOperation : Fees Transferred
+        
+        NormalOperation --> CredentialRefresh : Lender Credential Refresh
+        CredentialRefresh --> NormalOperation : Credential Updated
+        
+        state ParameterUpdate {
+            [*] --> APRChange
+            [*] --> ReserveRatioChange
+            [*] --> MaxSupplyChange
+            
+            APRChange --> ConstraintCheck : MarketConstraintHooks
+            ReserveRatioChange --> ConstraintCheck
+            MaxSupplyChange --> ConstraintCheck
+            
+            ConstraintCheck --> FixedTermCheck : FixedTermLoanHooks
+            FixedTermCheck --> [*] : Validation Complete
+        }
+        
+        state EmergencyOperation {
+            [*] --> TokenRescue
+            [*] --> ForcedWithdrawal
+            [*] --> AccountNuke
+            [*] --> AccessBlocking
+            
+            TokenRescue --> [*] : rescueTokens()
+            ForcedWithdrawal --> [*] : forceBuyBack()
+            AccountNuke --> [*] : nukeFromOrbit()
+            AccessBlocking --> [*] : blockFromDeposits()
+        }
+        
+        state BorrowingOperation {
+            [*] --> AssetBorrow
+            [*] --> DebtRepayment
+            
+            AssetBorrow --> [*] : borrow()
+            DebtRepayment --> [*] : repay()
+        }
+    }
+
+    state Delinquent {
+        [*] --> InitialDelinquency
+        InitialDelinquency --> GraceTimeIncrementing : Each State Update
+        GraceTimeIncrementing --> InitialDelinquency : Grace Period Active
+        GraceTimeIncrementing --> FeeAccrual : Grace Period Exceeded
+        FeeAccrual --> FeeAccrual : Delinquency Fees Compound
+    }
+
+    state HooksLifecycle {
+        [*] --> TemplateStored
+        TemplateStored --> InstanceDeployed : Clone from Template
+        InstanceDeployed --> InstanceConfigured : Initialize Configuration
+        InstanceConfigured --> ActiveInstance : First Market Deployment
+        
+        ActiveInstance --> RoleProviderAdded : addRoleProvider()
+        RoleProviderAdded --> ActiveInstance : Provider Configured
+        
+        ActiveInstance --> CredentialManagement : Lender Interactions
+        CredentialManagement --> ActiveInstance : Credentials Processed
+        
+        ActiveInstance --> InstanceDeprecated : No Active Markets
+        InstanceDeprecated --> [*]
+    }
+
+    state LenderLifecycle {
+        [*] --> CredentialPending
+        CredentialPending --> CredentialApproved : Successful Validation
+        CredentialPending --> CredentialRejected : Validation Failed
+        
+        CredentialApproved --> DepositAuthorized : Has Valid Credential
+        DepositAuthorized --> TokensHeld : Successful Deposit
+        
+        TokensHeld --> WithdrawalQueued : queueWithdrawal()
+        WithdrawalQueued --> WithdrawalExecuted : executeWithdrawal()
+        WithdrawalExecuted --> TokensHeld : Partial Withdrawal
+        WithdrawalExecuted --> CredentialApproved : Full Withdrawal
+        
+        CredentialApproved --> CredentialExpired : TTL Exceeded
+        CredentialExpired --> CredentialPending : Refresh Required
+        
+        TokensHeld --> SanctionedEscrow : Sanctions Detected
+        SanctionedEscrow --> TokensHeld : Sanction Override
+        
+        CredentialRejected --> [*]
+        SanctionedEscrow --> [*]
+    }
+
+    state WithdrawalBatchLifecycle {
+        [*] --> BatchCreated
+        BatchCreated --> BatchAccumulating : Additional Withdrawals
+        BatchAccumulating --> BatchAccumulating : More Withdrawals Added
+        BatchAccumulating --> BatchExpired : Duration Elapsed
+        BatchExpired --> BatchProcessable : Available for Execution
+        BatchProcessable --> BatchPartiallyPaid : Insufficient Liquidity
+        BatchProcessable --> BatchFullyPaid : Sufficient Liquidity
+        BatchPartiallyPaid --> BatchProcessable : More Liquidity Available
+        BatchFullyPaid --> [*]
+    }

@@ -1,0 +1,64 @@
+sequenceDiagram
+    participant ProtocolOwner
+    participant WildcatArchController
+    participant Borrower
+    participant HooksFactory
+    participant HooksTemplate
+    participant AccessControlHooks
+    participant IRoleProvider
+    participant WildcatMarket
+    participant Lender
+    participant WildcatSanctionsSentinel
+    participant WildcatSanctionsEscrow
+    participant MarketConstraintHooks
+
+    Note over ProtocolOwner,WildcatArchController: Borrower Onboarding
+    ProtocolOwner->>WildcatArchController: registerBorrower(borrowerAddress)
+    WildcatArchController->>WildcatArchController: Store borrower permission
+
+    Note over Borrower,HooksFactory: Market Deployment
+    Borrower->>HooksFactory: deployMarketAndHooks(marketParams, hooksConfig)
+    HooksFactory->>WildcatArchController: Check borrower permission
+    WildcatArchController-->>HooksFactory: Permission verified
+    HooksFactory->>HooksTemplate: Clone hooks instance
+    HooksTemplate-->>HooksFactory: New hooks instance address
+    HooksFactory->>AccessControlHooks: Initialize(hooksConfig)
+    HooksFactory->>WildcatMarket: Deploy market(marketParams, hooksAddress)
+    WildcatMarket->>WildcatArchController: Register market
+    HooksFactory-->>Borrower: Market deployed
+
+    Note over Borrower,IRoleProvider: Access Control Setup
+    Borrower->>AccessControlHooks: addRoleProvider(providerAddress)
+    AccessControlHooks->>IRoleProvider: Register provider
+
+    Note over Lender,WildcatMarket: Lender Deposit Flow
+    Lender->>IRoleProvider: requestCredential()
+    IRoleProvider-->>Lender: Issue credential
+    Lender->>WildcatMarket: deposit(amount)
+    WildcatMarket->>AccessControlHooks: onDeposit(lender, amount)
+    AccessControlHooks->>IRoleProvider: validateCredential(lender)
+    IRoleProvider-->>AccessControlHooks: Credential valid
+    AccessControlHooks->>WildcatSanctionsSentinel: isSanctioned(lender)
+    WildcatSanctionsSentinel-->>AccessControlHooks: Not sanctioned
+    AccessControlHooks-->>WildcatMarket: Deposit allowed
+    WildcatMarket->>WildcatMarket: Mint market tokens
+    WildcatMarket-->>Lender: Market tokens
+
+    Note over Lender,WildcatMarket: Withdrawal Request
+    Lender->>WildcatMarket: queueWithdrawal(amount)
+    WildcatMarket->>AccessControlHooks: onQueueWithdrawal(lender, amount)
+    AccessControlHooks-->>WildcatMarket: Withdrawal allowed
+    WildcatMarket->>WildcatMarket: Create withdrawal batch
+    WildcatMarket-->>Lender: Withdrawal queued
+
+    Note over Borrower,WildcatMarket: Market Operations
+    Borrower->>WildcatMarket: setAnnualInterestBips(newRate)
+    WildcatMarket->>MarketConstraintHooks: onSetAnnualInterestBips(newRate)
+    MarketConstraintHooks-->>WildcatMarket: Rate change allowed
+    WildcatMarket->>WildcatMarket: Update interest rate
+
+    Note over WildcatMarket,WildcatSanctionsEscrow: Sanctions Handling
+    WildcatMarket->>WildcatSanctionsSentinel: isSanctioned(address)
+    WildcatSanctionsSentinel-->>WildcatMarket: Address sanctioned
+    WildcatMarket->>WildcatSanctionsEscrow: Create escrow
+    WildcatSanctionsEscrow->>WildcatSanctionsEscrow: Hold funds

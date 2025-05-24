@@ -1,0 +1,201 @@
+digraph WildcatV2_OwnershipPermissions {
+    rankdir=TB;
+    compound=true;
+    node [shape=box, style="rounded,filled", fontname="Arial"];
+    edge [fontname="Arial"];
+    
+    // Hierarchy levels with different colors
+    // Protocol level - dark purple
+    // Factory level - medium purple
+    // Market level - light purple
+    // User level - gray
+    
+    // Protocol Level
+    subgraph cluster_protocol {
+        label="Protocol Level";
+        style="filled,rounded";
+        fillcolor="#e6e6fa";
+        
+        node [fillcolor="#4B0082", fontcolor=white];
+        ProtocolOwner [label="Protocol Owner\n(Multisig)", shape=hexagon];
+        WildcatArchController [label="WildcatArchController\n- Master Registry\n- Borrower Gate\n- Asset Blacklist\n- Fee Configuration"];
+        WildcatSanctionsSentinel [label="WildcatSanctionsSentinel\n- Sanctions Monitoring\n- Escrow Creation"];
+    }
+    
+    // Factory Level
+    subgraph cluster_factory {
+        label="Factory Level";
+        style="filled,rounded";
+        fillcolor="#f0e6ff";
+        
+        node [fillcolor="#6A0DAD", fontcolor=white];
+        HooksFactory [label="HooksFactory\n- Market Deployer\n- Hooks Deployer\n- Fee Collection"];
+        HooksTemplates [label="Hooks Templates\n- AccessControlHooks\n- MarketConstraintHooks\n- FixedTermLoanHooks"];
+        SphereXEngine [label="SphereX Engine\n- Security Monitoring\n- Transaction Protection"];
+    }
+    
+    // Market Level
+    subgraph cluster_market {
+        label="Market Level";
+        style="filled,rounded";
+        fillcolor="#f5f0ff";
+        
+        node [fillcolor="#9370DB", fontcolor=white];
+        MarketInstance [label="Market Instance\n- Borrower Owned\n- Hooks Controlled\n- SphereX Protected"];
+        HooksInstance [label="Hooks Instance\n- Access Rules\n- Parameter Constraints\n- Term Management"];
+        SanctionsEscrow [label="Sanctions Escrow\n- Asset Custody\n- Release Mechanism"];
+    }
+    
+    // User Level
+    subgraph cluster_users {
+        label="User Level";
+        style="filled,rounded";
+        fillcolor="#f5f5f5";
+        
+        node [fillcolor="#808080", fontcolor=white];
+        RegisteredBorrower [label="Registered Borrower\n- Can Deploy Markets\n- Configure Hooks\n- Manage Terms"];
+        AuthorizedLender [label="Authorized Lender\n- Has Credential\n- Can Deposit/Withdraw\n- Time-Limited Access"];
+        RoleProvider [label="Role Provider\n- Issues Credentials\n- Validates Access\n- Pull/Push Models"];
+        FeeRecipient [label="Fee Recipient\n- Receives Protocol Fees\n- Collects Origination"];
+    }
+    
+    // Data Layer
+    subgraph cluster_data {
+        label="Data & Lens Layer";
+        style="filled,rounded";
+        fillcolor="#f0f8ff";
+        
+        node [fillcolor="#4682B4", fontcolor=white];
+        MarketLens [label="MarketLens\n- Data Aggregation\n- Read-Only Access\n- Multi-Market Views"];
+    }
+    
+    // Ownership Relationships (solid lines)
+    ProtocolOwner -> WildcatArchController [label="owns", style=bold, color="#4B0082"];
+    ProtocolOwner -> WildcatSanctionsSentinel [label="owns", style=bold, color="#4B0082"];
+    WildcatArchController -> HooksFactory [label="authorizes", style=bold, color="#4B0082"];
+    RegisteredBorrower -> MarketInstance [label="owns", style=bold, color="#006400"];
+    RegisteredBorrower -> HooksInstance [label="configures", style=bold, color="#006400"];
+    
+    // Permission Flows (dashed lines)
+    ProtocolOwner -> RegisteredBorrower [label="grants borrower role", style=dashed, color="#FF0000"];
+    ProtocolOwner -> HooksTemplates [label="approves templates", style=dashed, color="#FF0000"];
+    ProtocolOwner -> SphereXEngine [label="configures security", style=dashed, color="#FF0000"];
+    HooksFactory -> MarketInstance [label="deploys with permissions", style=dashed, color="#FF0000"];
+    HooksFactory -> HooksInstance [label="deploys from template", style=dashed, color="#FF0000"];
+    
+    // Access Control (dotted lines)
+    HooksInstance -> AuthorizedLender [label="validates access", style=dotted, color="#0000FF"];
+    RoleProvider -> AuthorizedLender [label="issues credential", style=dotted, color="#0000FF"];
+    HooksInstance -> RoleProvider [label="trusts", style=dotted, color="#0000FF"];
+    
+    // Security & Compliance (red dashed)
+    WildcatSanctionsSentinel -> SanctionsEscrow [label="creates on sanctions", style=dashed, color="#DC143C"];
+    SphereXEngine -> MarketInstance [label="protects transactions", style=dashed, color="#9370DB"];
+    SphereXEngine -> HooksFactory [label="protects deployments", style=dashed, color="#9370DB"];
+    
+    // Data Access (blue dotted)
+    MarketLens -> WildcatArchController [label="reads registry", style=dotted, color="#4682B4"];
+    MarketLens -> MarketInstance [label="reads market data", style=dotted, color="#4682B4"];
+    MarketLens -> HooksInstance [label="reads hooks data", style=dotted, color="#4682B4"];
+    
+    // Hierarchical Control
+    WildcatArchController -> RegisteredBorrower [label="can revoke", color="#8B0000", style=bold];
+    RegisteredBorrower -> RoleProvider [label="can add/remove", color="#8B0000", style=bold];
+    RegisteredBorrower -> SanctionsEscrow [label="can override sanctions", color="#8B0000", style=bold];
+    
+    // Fee Flows
+    MarketInstance -> FeeRecipient [label="pays protocol fees", color="#DAA520", style=bold];
+    HooksFactory -> FeeRecipient [label="pays origination fees", color="#DAA520", style=bold];
+    
+    // Permission Matrix
+    node [shape=plaintext];
+    PermissionMatrix [label=<
+        <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+            <TR>
+                <TD BGCOLOR="#4B0082" COLSPAN="6"><FONT COLOR="white"><B>Permission Matrix</B></FONT></TD>
+            </TR>
+            <TR>
+                <TD BGCOLOR="#d3d3d3"><B>Role</B></TD>
+                <TD BGCOLOR="#d3d3d3"><B>Deploy Markets</B></TD>
+                <TD BGCOLOR="#d3d3d3"><B>Configure Hooks</B></TD>
+                <TD BGCOLOR="#d3d3d3"><B>Deposit/Withdraw</B></TD>
+                <TD BGCOLOR="#d3d3d3"><B>Admin Functions</B></TD>
+                <TD BGCOLOR="#d3d3d3"><B>Special Powers</B></TD>
+            </TR>
+            <TR>
+                <TD>Protocol Owner</TD>
+                <TD BGCOLOR="#90EE90">✓ (via factory)</TD>
+                <TD BGCOLOR="#90EE90">✓ (templates)</TD>
+                <TD BGCOLOR="#FFB6C1">✗</TD>
+                <TD BGCOLOR="#90EE90">✓ Full</TD>
+                <TD BGCOLOR="#90EE90">Registry Control</TD>
+            </TR>
+            <TR>
+                <TD>Registered Borrower</TD>
+                <TD BGCOLOR="#90EE90">✓</TD>
+                <TD BGCOLOR="#90EE90">✓</TD>
+                <TD BGCOLOR="#90EE90">✓ (own markets)</TD>
+                <TD BGCOLOR="#FFFFE0">Market Specific</TD>
+                <TD BGCOLOR="#FFFFE0">Sanctions Override</TD>
+            </TR>
+            <TR>
+                <TD>Authorized Lender</TD>
+                <TD BGCOLOR="#FFB6C1">✗</TD>
+                <TD BGCOLOR="#FFB6C1">✗</TD>
+                <TD BGCOLOR="#90EE90">✓</TD>
+                <TD BGCOLOR="#FFB6C1">✗</TD>
+                <TD BGCOLOR="#FFB6C1">None</TD>
+            </TR>
+            <TR>
+                <TD>Role Provider</TD>
+                <TD BGCOLOR="#FFB6C1">✗</TD>
+                <TD BGCOLOR="#FFB6C1">✗</TD>
+                <TD BGCOLOR="#FFB6C1">✗</TD>
+                <TD BGCOLOR="#FFFFE0">Credential Mgmt</TD>
+                <TD BGCOLOR="#FFFFE0">Access Control</TD>
+            </TR>
+            <TR>
+                <TD>Fee Recipient</TD>
+                <TD BGCOLOR="#FFB6C1">✗</TD>
+                <TD BGCOLOR="#FFB6C1">✗</TD>
+                <TD BGCOLOR="#FFB6C1">✗</TD>
+                <TD BGCOLOR="#FFFFE0">Fee Collection</TD>
+                <TD BGCOLOR="#FFB6C1">None</TD>
+            </TR>
+            <TR>
+                <TD>MarketLens</TD>
+                <TD BGCOLOR="#FFB6C1">✗</TD>
+                <TD BGCOLOR="#FFB6C1">✗</TD>
+                <TD BGCOLOR="#FFB6C1">✗</TD>
+                <TD BGCOLOR="#90EE90">Read-Only</TD>
+                <TD BGCOLOR="#FFFFE0">Data Aggregation</TD>
+            </TR>
+        </TABLE>
+    >];
+    
+    // Special Permissions
+    subgraph cluster_special {
+        label="Special Permissions & Emergency Powers";
+        style="filled,rounded";
+        fillcolor="#fff0f0";
+        
+        node [fillcolor="#FF6347", fontcolor=white, shape=diamond];
+        ParameterUpdates [label="Parameter Updates\n(Borrower + Hooks)"];
+        SanctionsOverride [label="Sanctions Override\n(Borrower Only)"];
+        FeeCollection [label="Fee Collection\n(Recipient + Borrower)"];
+        CredentialManagement [label="Credential Management\n(Provider + Lender)"];
+        DataAccess [label="Data Access\n(Lens + Public)"];
+        EmergencyOperations [label="Emergency Operations\n(rescueTokens, forceBuyBack,\nnukeFromOrbit)"];
+        BorrowingOperations [label="Borrowing Operations\n(borrow, repay)"];
+        AccessControl [label="Access Control\n(blockFromDeposits,\nunblockFromDeposits)"];
+    }
+    
+    RegisteredBorrower -> ParameterUpdates [label="subject to hooks", color="#FF0000", style=bold];
+    RegisteredBorrower -> SanctionsOverride [label="exclusive power", color="#FF0000", style=bold];
+    RegisteredBorrower -> EmergencyOperations [label="exclusive power", color="#FF0000", style=bold];
+    RegisteredBorrower -> BorrowingOperations [label="exclusive power", color="#FF0000", style=bold];
+    RegisteredBorrower -> AccessControl [label="exclusive power", color="#FF0000", style=bold];
+    FeeRecipient -> FeeCollection [label="primary right", color="#DAA520", style=bold];
+    RoleProvider -> CredentialManagement [label="validation authority", color="#0000FF", style=bold];
+    MarketLens -> DataAccess [label="aggregation service", color="#4682B4", style=bold];
+}

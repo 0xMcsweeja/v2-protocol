@@ -1,0 +1,82 @@
+flowchart TD
+    Start(["Lender Initiates Deposit"])
+    
+    Start --> CheckSanctions{"Is Lender\nSanctioned?"}
+    CheckSanctions -- Yes --> CreateEscrow["Create Sanctions Escrow"]
+    CreateEscrow --> RejectDeposit["Reject Deposit"]
+    
+    CheckSanctions -- No --> CheckCredential{"Has Valid\nCredential?"}
+    CheckCredential -- No --> CheckProviders{"Role Providers\nAvailable?"}
+    CheckProviders -- No --> RejectDeposit
+    CheckProviders -- Yes --> RequestCredential["Request Credential\nfrom Provider"]
+    RequestCredential --> ProviderCheck{"Provider\nApproves?"}
+    ProviderCheck -- No --> RejectDeposit
+    ProviderCheck -- Yes --> IssueCredential["Issue Credential"]
+    IssueCredential --> CheckCredential
+    
+    CheckCredential -- Yes --> CheckMarketState{"Market\nAccepting\nDeposits?"}
+    CheckMarketState -- No --> RejectDeposit
+    CheckMarketState -- Yes --> CheckMinDeposit{"Meets Min\nDeposit?"}
+    CheckMinDeposit -- No --> RejectDeposit
+    CheckMinDeposit -- Yes --> CheckMaxSupply{"Within Max\nSupply?"}
+    CheckMaxSupply -- No --> RejectDeposit
+    CheckMaxSupply -- Yes --> ExecuteDeposit["Execute Deposit"]
+    
+    ExecuteDeposit --> UpdateState["Update Market State"]
+    UpdateState --> MintTokens["Mint Market Tokens"]
+    MintTokens --> MarkKnownLender["Mark as Known Lender"]
+    MarkKnownLender --> Success(["Deposit Complete"])
+    
+    RejectDeposit --> Fail(["Deposit Failed"])
+
+    subgraph "Market Operations"
+        OpStart(["Market Operation Request"])
+        OpStart --> OpType{"Operation\nType?"}
+        
+        OpType -- "Set APR" --> CheckAPRConstraints{"Within APR\nConstraints?"}
+        CheckAPRConstraints -- Yes --> CheckAPRDecrease{"APR\nDecreasing?"}
+        CheckAPRConstraints -- No --> OpReject["Reject Operation"]
+        CheckAPRDecrease -- No --> UpdateAPR["Update APR"]
+        CheckAPRDecrease -- Yes --> StartRagequit["Start Ragequit Timer"]
+        StartRagequit --> UpdateAPR
+        
+        OpType -- "Set Capacity" --> CheckCapConstraints{"Within Capacity\nConstraints?"}
+        CheckCapConstraints -- Yes --> UpdateCapacity["Update Capacity"]
+        CheckCapConstraints -- No --> OpReject
+        
+        OpType -- "Close Market" --> CheckOutstanding{"Outstanding\nDebt?"}
+        CheckOutstanding -- Yes --> OpReject
+        CheckOutstanding -- No --> CloseMarket["Close Market"]
+        
+        OpType -- "Force Withdrawal" --> CheckLenderTokens{"Lender Has\nTokens?"}
+        CheckLenderTokens -- No --> OpReject
+        CheckLenderTokens -- Yes --> ForceWithdrawal["Queue Forced Withdrawal"]
+        
+        UpdateAPR --> OpSuccess(["Operation Success"])
+        UpdateCapacity --> OpSuccess
+        CloseMarket --> OpSuccess
+        ForceWithdrawal --> OpSuccess
+        OpReject --> OpFail(["Operation Failed"])
+    end
+
+    subgraph "Withdrawal Process"
+        WStart(["Withdrawal Request"])
+        WStart --> WCheckKnown{"Is Known\nLender?"}
+        WCheckKnown -- No --> WReject["Reject Withdrawal"]
+        WCheckKnown -- Yes --> WCheckBalance{"Has Market\nTokens?"}
+        WCheckBalance -- No --> WReject
+        WCheckBalance -- Yes --> WCheckFixed{"Fixed Term\nActive?"}
+        WCheckFixed -- Yes --> WCheckExpiry{"Term\nExpired?"}
+        WCheckExpiry -- No --> WReject
+        WCheckExpiry -- Yes --> QueueWithdrawal
+        WCheckFixed -- No --> QueueWithdrawal["Queue Withdrawal"]
+        
+        QueueWithdrawal --> CreateBatch{"New Batch\nNeeded?"}
+        CreateBatch -- Yes --> NewBatch["Create Withdrawal Batch"]
+        CreateBatch -- No --> AddToBatch["Add to Existing Batch"]
+        NewBatch --> UpdateWithdrawals["Update Withdrawals Pool"]
+        AddToBatch --> UpdateWithdrawals
+        
+        UpdateWithdrawals --> WSuccess(["Withdrawal Queued"])
+        WReject --> WFail(["Withdrawal Failed"])
+    end

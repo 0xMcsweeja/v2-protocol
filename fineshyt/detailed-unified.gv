@@ -1,0 +1,256 @@
+digraph WildcatV2Protocol {
+    rankdir=TB;
+    compound=true;
+    node [shape=box, style="rounded,filled", fontname="Arial", fontsize=9];
+    edge [fontname="Arial", fontsize=8];
+    
+    // Core Protocol Contracts
+    "WildcatArchController.sol" [fillcolor="#4169E1", fontcolor=white, shape=box3d, label="WildcatArchController.sol\n├─ registerBorrower() / removeBorrower() [owner]\n├─ registerControllerFactory() [owner]\n├─ registerController() [factory]\n├─ registerMarket() [controller]\n├─ isRegisteredBorrower() / isRegisteredMarket()\n├─ blacklistAsset() / removeAssetBlacklist() [owner]\n├─ setProtocolFeeConfiguration() [owner]\n├─ getRegisteredBorrowers() / getRegisteredMarkets()\n├─ registeredBorrowers: mapping\n├─ registeredControllerFactories: mapping\n├─ registeredControllers: mapping\n├─ registeredMarkets: mapping\n├─ blacklistedAssets: mapping\n├─ protocolFeeConfiguration: ProtocolFeeConfiguration\n└─ sphereXEngineSingleton: address"];
+    
+    "HooksFactory.sol" [fillcolor="#4169E1", fontcolor=white, shape=box3d, label="HooksFactory.sol\n├─ addHooksTemplate() [archController]\n├─ disableHooksTemplate() [archController]\n├─ deployHooksInstance() [borrower]\n├─ deployMarket() [borrower]\n├─ computeHooksAddress()\n├─ getHooksTemplateDetails()\n├─ getMarketsForHooksTemplate()\n├─ getMarketsForBorrower()\n├─ setProtocolFeeForOriginationFeeAsset() [owner]\n├─ pushProtocolFeeUpdate() [owner]\n├─ archController: address\n├─ hooksTemplates: mapping\n├─ deployedMarkets: mapping\n├─ marketCountForBorrower: mapping\n└─ _tmpMarketParameterStorage: MarketParametersTmp"];
+    
+    // Market Contracts  
+    "WildcatMarket.sol" [fillcolor="#228B22", fontcolor=white, shape=box3d, label="WildcatMarket.sol\n[Main Contract - Inherits All]\n├─ updateState() [public]\n├─ deposit(uint256) [public]\n├─ borrow(uint256) [onlyBorrower]\n├─ repay(uint256) [public]\n├─ collectFees() [feeRecipient/borrower]\n├─ rescueTokens(address) [onlyBorrower]\n├─ forceBuyBack(address,uint256) [onlyBorrower]\n├─ closeMarket() [onlyBorrower]\n├─ asset: address\n├─ borrower: address\n├─ hooks: address\n├─ feeRecipient: address\n├─ protocolFeeBips: uint16\n├─ marketToken: string\n└─ state: MarketState"];
+    
+    "WildcatMarketBase.sol" [fillcolor="#32CD32", fontcolor=white, label="WildcatMarketBase.sol\n├─ version() / name() / symbol()\n├─ archController() / asset() / borrower()\n├─ _getUpdatedState() [internal]\n├─ _writeState() [internal]\n├─ currentState() / previousState()\n├─ totalSupply() / scaledTotalSupply()\n├─ scaledBalanceOf(address)\n├─ scaleFactor() / liquidityRequired()\n├─ coverageLiquidity() / borrowableAssets()\n├─ totalDebts() / accruedProtocolFees()\n├─ withdrawableProtocolFees()\n├─ _tmpMarketParameterStorage: MarketParametersTmp\n├─ previousState: MarketState\n├─ _accounts: mapping(address => Account)\n└─ _accountsArray: EnumerableSet.AddressSet"];
+    
+    "WildcatMarketConfig.sol" [fillcolor="#32CD32", fontcolor=white, label="WildcatMarketConfig.sol\n├─ isClosed() / maxTotalSupply()\n├─ annualInterestBips() / reserveRatioBips()\n├─ maximumDeposit() [view]\n├─ setAnnualInterestBips(uint16) [onlyBorrower]\n├─ setReserveRatioBips(uint16) [onlyBorrower]\n├─ setMaxTotalSupply(uint128) [onlyBorrower]\n├─ setAnnualInterestAndReserveRatioBips() [onlyBorrower]\n├─ updateAccountAuthorization()\n├─ nukeFromOrbit(address) [emergency]\n└─ Internal: _setAnnualInterestBips()"];
+    
+    "WildcatMarketToken.sol" [fillcolor="#32CD32", fontcolor=white, label="WildcatMarketToken.sol\n├─ balanceOf(address) [override]\n├─ totalSupply() [override]\n├─ allowance(address,address)\n├─ approve(address,uint256)\n├─ transfer(address,uint256)\n├─ transferFrom(address,address,uint256)\n├─ _getAccountWithRole(address)\n├─ _transfer() [internal hook-enabled]\n├─ _scaledBalances: mapping\n├─ _allowances: mapping\n└─ Account struct with auth fields"];
+    
+    "WildcatMarketWithdrawals.sol" [fillcolor="#32CD32", fontcolor=white, label="WildcatMarketWithdrawals.sol\n├─ queueWithdrawal(uint128) [hook-enabled]\n├─ executeWithdrawal(uint32,uint128)\n├─ processUnpaidWithdrawalBatch(uint32)\n├─ getWithdrawalBatch(uint32)\n├─ getAccountWithdrawalStatus(address,uint32)\n├─ getAvailableWithdrawalAmount(address,uint32)\n├─ getUnpaidBatchExpiries()\n├─ _withdrawalData: mapping\n├─ _withdrawalBatches: mapping\n├─ _unpaidWithdrawalBatchExpiries: EnumerableSet\n└─ WithdrawalBatch / AccountWithdrawal structs"];
+    
+    // Hooks Contracts
+    "AccessControlHooks.sol" [fillcolor="#FF8C00", fontcolor=white, shape=hexagon, label="AccessControlHooks.sol\n├─ version() / config()\n├─ onCreateMarket() / onDeposit()\n├─ onQueueWithdrawal() / onExecuteWithdrawal()\n├─ onTransfer() / onBorrow() / onRepay()\n├─ onSetAnnualInterestBips() / onSetReserveRatioBips()\n├─ onSetMaxTotalSupply() / onCloseMarket()\n├─ setMinimumDeposit() [onlyBorrower]\n├─ addRoleProvider() / removeRoleProvider() [onlyBorrower]\n├─ blockFromDeposits() / unblockFromDeposits() [onlyBorrower]\n├─ grantRole() / grantRoles() / revokeRole()\n├─ pullProviderCredential() / validateCredential()\n├─ getRoleProvider() / getPullProviders()\n├─ getHookedMarket() / getLenderStatus()\n├─ _roleProviders: mapping\n├─ _lenderStatus: mapping\n├─ _accountApprovalStatus: mapping\n└─ _pullProviders: address[]"];
+    
+    "MarketConstraintHooks.sol" [fillcolor="#FF8C00", fontcolor=white, shape=hexagon, label="MarketConstraintHooks.sol\n├─ onSetAnnualInterestBips() [constraint validation]\n├─ onSetReserveRatioBips() [constraint validation]\n├─ onSetMaxTotalSupply() [constraint validation]\n├─ setTemporaryReserveRatio() [onlyBorrower]\n├─ constraints: MarketParameterConstraints\n└─ _temporaryReserveRatio: mapping"];
+    
+    "FixedTermLoanHooks.sol" [fillcolor="#FF8C00", fontcolor=white, shape=hexagon, label="FixedTermLoanHooks.sol\n├─ version() / config()\n├─ onCreateMarket() / onQueueWithdrawal()\n├─ onSetAnnualInterestBips() [term protection]\n├─ setFixedTermEndTime() [onlyBorrower]\n├─ setMinimumDeposit() [onlyBorrower]\n├─ addRoleProvider() / removeRoleProvider() [onlyBorrower]\n├─ blockFromDeposits() / unblockFromDeposits() [onlyBorrower]\n├─ grantRole() / grantRoles() / revokeRole()\n├─ pullProviderCredential() / validateCredential()\n├─ getRoleProvider() / getPullProviders()\n├─ getHookedMarket() / getLenderStatus()\n├─ fixedTermEndTime: uint32\n├─ minimumDeposit: uint256\n└─ canReduceFixedTerm: bool"];
+    
+    "IRoleProvider.sol" [fillcolor="#FFA500", shape=ellipse, label="IRoleProvider.sol\n[External Provider Interface]\n├─ isPullProvider() [view]\n├─ getCredential(address) [view]\n├─ validateCredential(address,bytes) [returns timestamp]\n└─ Implementation-specific credential logic"];
+    
+    // Sanctions System
+    "WildcatSanctionsSentinel.sol" [fillcolor="#DC143C", fontcolor=white, shape=octagon, label="WildcatSanctionsSentinel.sol\n├─ isSanctioned(address) [view]\n├─ overrideSanction(address) [borrower-only]\n├─ removeSanctionOverride(address) [borrower-only]\n├─ createEscrow(address,address,address) [returns escrow]\n├─ getEscrowAddress(address,address,address) [view]\n├─ _chainalysisSanctionsList: address\n├─ _sanctionOverrides: mapping\n└─ _escrowContracts: mapping"];
+    
+    "WildcatSanctionsEscrow.sol" [fillcolor="#DC143C", fontcolor=white, shape=octagon, label="WildcatSanctionsEscrow.sol\n├─ releaseEscrow() [when sanctions lifted]\n├─ escrowedAsset() / escrowedAmount() [view]\n├─ canReleaseEscrow() [view]\n├─ balance: uint256\n├─ account: address\n├─ borrower: address\n├─ asset: address\n└─ sentinel: address"];
+    
+    // Libraries
+    "MarketState.sol" [fillcolor="#87CEEB", shape=parallelogram, label="MarketState Library\n├─ totalAssets() / liquidityRequired()\n├─ normalizeAmount() / scaleAmount()\n├─ maximumDeposit() / withdrawalBatchPayment()\n├─ applyProtocolFee() / updateScaleFactorAndFees()\n├─ hasPendingExpiredBatch() / processExpiredBatch()\n└─ All market state calculations"];
+    
+    "FeeMath.sol" [fillcolor="#87CEEB", shape=parallelogram, label="FeeMath Library\n├─ calculateLinearInterestFromBips()\n├─ applyWithdrawalBatchPayment()\n├─ mulDivUp() / mulDivDown()\n├─ bipToRay() / rayToWad()\n└─ Fixed-point math utilities"];
+    
+    "Withdrawal.sol" [fillcolor="#87CEEB", shape=parallelogram, label="Withdrawal Library\n├─ scaledOwedAmount() / availableWithdrawalAmount()\n├─ createWithdrawal() / processWithdrawal()\n├─ WithdrawalBatch manipulation\n└─ Withdrawal calculations"];
+    
+    "LibStoredInitCode.sol" [fillcolor="#87CEEB", shape=parallelogram, label="LibStoredInitCode\n├─ create2WithStoredInitCode()\n├─ calculateCreate2Address()\n├─ deployInitCode() / getInitCodeHash()\n└─ CREATE2 deployment utilities"];
+    
+    "MathUtils.sol" [fillcolor="#87CEEB", shape=parallelogram, label="MathUtils Library\n├─ mulDiv() variants\n├─ min() / max() / satSub()\n├─ Percentage calculations\n└─ Safe arithmetic operations"];
+    
+    "SafeCastLib.sol" [fillcolor="#87CEEB", shape=parallelogram, label="SafeCastLib Library\n├─ toUint128() / toUint104() / toUint32()\n├─ toUint16() / toUint8()\n└─ Safe type casting"];
+    
+    "LibERC20.sol" [fillcolor="#87CEEB", shape=parallelogram, label="LibERC20 Library\n├─ safeTransfer() / safeTransferFrom()\n├─ safeTransferAll() [for rescue]\n├─ balanceOf() / allowance()\n└─ Safe ERC20 operations"];
+    
+    "BoolUtils.sol" [fillcolor="#87CEEB", shape=parallelogram, label="BoolUtils Library\n├─ and() / or() / not()\n└─ Boolean utilities"];
+    
+    "StringQuery.sol" [fillcolor="#87CEEB", shape=parallelogram, label="StringQuery Library\n├─ String manipulation functions\n└─ Query string utilities"];
+    
+    // Types & Structs
+    "HooksConfig.sol" [fillcolor="#DDA0DD", shape=diamond, label="HooksConfig Type\n├─ useOnDeposit / useOnQueueWithdrawal\n├─ useOnExecuteWithdrawal / useOnTransfer\n├─ useOnBorrow / useOnRepay\n├─ useOnSetAnnualInterestBips\n├─ useOnSetReserveRatioBips\n├─ useOnSetMaxTotalSupply\n├─ useOnCloseMarket / useOnNukeFromOrbit\n└─ useOnSetProtocolFeeBips"];
+    
+    "LenderStatus.sol" [fillcolor="#DDA0DD", shape=diamond, label="LenderStatus Type\n├─ isApproved: bool\n├─ lastProvider: address\n├─ lastApprovalTimestamp: uint32\n└─ canRefresh: bool"];
+    
+    "RoleProvider.sol" [fillcolor="#DDA0DD", shape=diamond, label="RoleProvider Type\n├─ isActive: bool\n├─ timeToLive: uint32\n├─ pullProviderIndex: uint24\n└─ canRefresh: bool"];
+    
+    "TransientBytesArray.sol" [fillcolor="#DDA0DD", shape=diamond, label="TransientBytesArray Type\n├─ Transient storage for bytes arrays\n└─ Assembly-based implementation"];
+    
+    // Lens & Data Access
+    "MarketLens.sol" [fillcolor="#20B2AA", shape=ellipse, label="MarketLens.sol\n├─ getMarketsForBorrower(address)\n├─ getMarketsForHooksTemplate(bytes32)\n├─ getMarketData(address) [comprehensive]\n├─ getLenderData(address,address)\n├─ getWithdrawalBatchesData(address,uint32[])\n├─ getHooksTemplateDetails(bytes32)\n├─ getMultipleMarketData(address[])\n└─ Aggregated view functions"];
+    
+    "HooksDataStructs.sol" [fillcolor="#20B2AA", shape=ellipse, label="Lens Data Structures\n├─ MarketData / LenderAccountData\n├─ WithdrawalBatchData / TokenData\n├─ HooksTemplateData / HooksInstanceData\n├─ HooksConfigData / RoleProviderData\n└─ Comprehensive data containers"];
+    
+    // Interfaces
+    "IWildcatArchController.sol" [fillcolor="#FFD700", shape=note, label="IWildcatArchController.sol\n├─ Registration functions\n├─ Blacklist management\n├─ Fee configuration\n└─ Query functions"];
+    
+    "IHooksFactory.sol" [fillcolor="#FFD700", shape=note, label="IHooksFactory.sol\n├─ Template management\n├─ Deployment functions\n├─ Fee update functions\n└─ Query functions"];
+    
+    "IHooks.sol" [fillcolor="#FFD700", shape=note, label="IHooks.sol\n├─ All hook function signatures\n├─ onCreateMarket() / onDeposit()\n├─ onQueueWithdrawal() / onExecuteWithdrawal()\n├─ onTransfer() / onBorrow() / onRepay()\n├─ onSetAnnualInterestBips() / onSetReserveRatioBips()\n├─ onSetMaxTotalSupply() / onCloseMarket()\n├─ onNukeFromOrbit() / onSetProtocolFeeBips()\n├─ version() / config()\n└─ Base hooks interface"];
+    
+    "IMarketEventsAndErrors.sol" [fillcolor="#FFD700", shape=note, label="IMarketEventsAndErrors.sol\n├─ All market events\n├─ All error definitions\n├─ Deposit / Withdrawal events\n├─ Borrow / Repay events\n├─ State change events\n└─ Error types"];
+    
+    "IWildcatSanctionsSentinel.sol" [fillcolor="#FFD700", shape=note, label="IWildcatSanctionsSentinel.sol\n├─ Sanctions checking interface\n├─ Override management\n├─ Escrow creation\n└─ Query functions"];
+    
+    "IWildcatSanctionsEscrow.sol" [fillcolor="#FFD700", shape=note, label="IWildcatSanctionsEscrow.sol\n├─ Escrow release interface\n├─ Balance queries\n└─ Status functions"];
+    
+    "IERC20.sol" [fillcolor="#FFD700", shape=note, label="IERC20.sol\n├─ Standard ERC20 interface\n├─ transfer() / transferFrom()\n├─ approve() / allowance()\n├─ totalSupply() / balanceOf()\n└─ Standard functions"];
+    
+    "IChainalysisSanctionsList.sol" [fillcolor="#FFD700", shape=note, label="IChainalysisSanctionsList.sol\n├─ isSanctioned(address)\n└─ External oracle interface"];
+    
+    "ISphereXProtectedRegisteredBase.sol" [fillcolor="#FFD700", shape=note, label="ISphereXProtectedRegisteredBase.sol\n├─ SphereX integration interface\n├─ Function registration\n└─ Protection validation"];
+    
+    // SphereX Security System
+    "SphereXProtectedRegisteredBase.sol" [fillcolor="#9370DB", fontcolor=white, shape=diamond, label="SphereXProtectedRegisteredBase\n├─ _sphereXEngine: address\n├─ _registeredProtectedFunctions: mapping\n├─ sphereXValidatePre() [modifier]\n├─ sphereXValidatePost() [modifier]\n├─ _sphereXValidateInternalPre()\n├─ _sphereXValidateInternalPost()\n├─ _addProtectedFunction()\n└─ Real-time transaction protection"];
+    
+    "SphereXConfig.sol" [fillcolor="#9370DB", fontcolor=white, shape=diamond, label="SphereXConfig.sol\n├─ changeSphereXEngine() [admin]\n├─ addAllowedSenderOnEngine() [admin]\n├─ removeAllowedSenderOnEngine() [admin]\n├─ sphereXEngine() [view]\n└─ Engine configuration"];
+    
+    "ISphereXEngine.sol" [fillcolor="#9370DB", fontcolor=white, shape=diamond, label="ISphereXEngine.sol\n├─ sphereXValidatePre() [external]\n├─ sphereXValidatePost() [external]\n├─ addAllowedSender() [admin]\n├─ removeAllowedSender() [admin]\n└─ Engine interface"];
+    
+    // Error Libraries
+    "Errors.sol" [fillcolor="#FFB6C1", shape=parallelogram, label="Errors Library\n├─ All custom error definitions\n├─ Market errors / Hooks errors\n├─ Authorization errors\n├─ Validation errors\n└─ Centralized error definitions"];
+    
+    "MarketErrors.sol" [fillcolor="#FFB6C1", shape=parallelogram, label="MarketErrors Library\n├─ Market-specific errors\n├─ State validation errors\n├─ Parameter errors\n└─ Operation errors"];
+    
+    "MarketEvents.sol" [fillcolor="#FFB6C1", shape=parallelogram, label="MarketEvents Library\n├─ Market operation events\n├─ State change events\n├─ Parameter update events\n└─ Administrative events"];
+    
+    // Utility Contracts
+    "ReentrancyGuard.sol" [fillcolor="#FF69B4", fontcolor=white, shape=parallelogram, label="ReentrancyGuard\n├─ nonReentrant modifier\n├─ nonReentrantView modifier\n├─ _reentrancyGuardEntered()\n└─ Reentrancy protection"];
+    
+    "FunctionTypeCasts.sol" [fillcolor="#87CEEB", shape=parallelogram, label="FunctionTypeCasts Library\n├─ Function pointer casting\n├─ Assembly-based conversions\n└─ Type manipulation utilities"];
+    
+    "FIFOQueue.sol" [fillcolor="#87CEEB", shape=parallelogram, label="FIFOQueue Library\n├─ First-in-first-out queue\n├─ push() / pop() / peek()\n├─ Queue manipulation\n└─ Data structure utilities"];
+    
+    // External Actors
+    "Protocol Owner" [fillcolor="#C0C0C0", shape=ellipse, style="filled,dashed", label="Protocol Owner\n[Multisig/DAO]\n├─ Registry management\n├─ Template approval\n├─ Fee configuration\n├─ Asset blacklisting\n└─ SphereX configuration"];
+    
+    "Borrower" [fillcolor="#C0C0C0", shape=ellipse, style="filled,dashed", label="Registered Borrower\n├─ Market deployment\n├─ Hooks configuration\n├─ Parameter management\n├─ Emergency operations\n├─ Role provider management\n├─ Access control\n└─ Borrowing operations"];
+    
+    "Lender" [fillcolor="#C0C0C0", shape=ellipse, style="filled,dashed", label="Authorized Lender\n├─ Credential acquisition\n├─ Deposit operations\n├─ Withdrawal requests\n├─ Token transfers\n├─ Credential refresh\n└─ Market interaction"];
+    
+    "Fee Recipient" [fillcolor="#C0C0C0", shape=ellipse, style="filled,dashed", label="Fee Recipient\n├─ Protocol fee collection\n├─ Origination fee collection\n└─ Fee withdrawal"];
+    
+    "Role Provider" [fillcolor="#C0C0C0", shape=ellipse, style="filled,dashed", label="Credential Provider\n├─ Credential issuance\n├─ Validation services\n├─ Pull/Push models\n├─ TTL management\n└─ Refresh capability"];
+    
+    "Chainalysis Oracle" [fillcolor="#C0C0C0", shape=ellipse, style="filled,dashed", label="Chainalysis Sanctions List\n├─ Real-time sanctions data\n├─ Address checking\n└─ Compliance verification"];
+    
+    "SphereX Engine" [fillcolor="#C0C0C0", shape=ellipse, style="filled,dashed", label="SphereX Security Engine\n├─ Transaction monitoring\n├─ Threat detection\n├─ Real-time protection\n├─ Sender validation\n└─ Security enforcement"];
+    
+    // Inheritance relationships
+    "WildcatMarket.sol" -> "WildcatMarketBase.sol" [label="inherits", style=dashed, color="#0000FF", weight=10];
+    "WildcatMarket.sol" -> "WildcatMarketConfig.sol" [label="inherits", style=dashed, color="#0000FF", weight=10];
+    "WildcatMarket.sol" -> "WildcatMarketToken.sol" [label="inherits", style=dashed, color="#0000FF", weight=10];
+    "WildcatMarket.sol" -> "WildcatMarketWithdrawals.sol" [label="inherits", style=dashed, color="#0000FF", weight=10];
+    "WildcatMarketBase.sol" -> "SphereXProtectedRegisteredBase.sol" [label="inherits", style=dashed, color="#9370DB"];
+    "HooksFactory.sol" -> "SphereXProtectedRegisteredBase.sol" [label="inherits", style=dashed, color="#9370DB"];
+    
+    // Interface implementations
+    "WildcatArchController.sol" -> "IWildcatArchController.sol" [label="implements", style=dotted, color="#808080"];
+    "HooksFactory.sol" -> "IHooksFactory.sol" [label="implements", style=dotted, color="#808080"];
+    "AccessControlHooks.sol" -> "IHooks.sol" [label="implements", style=dotted, color="#808080"];
+    "MarketConstraintHooks.sol" -> "IHooks.sol" [label="implements", style=dotted, color="#808080"];
+    "FixedTermLoanHooks.sol" -> "IHooks.sol" [label="implements", style=dotted, color="#808080"];
+    "WildcatMarket.sol" -> "IMarketEventsAndErrors.sol" [label="implements", style=dotted, color="#808080"];
+    "WildcatSanctionsSentinel.sol" -> "IWildcatSanctionsSentinel.sol" [label="implements", style=dotted, color="#808080"];
+    "WildcatSanctionsEscrow.sol" -> "IWildcatSanctionsEscrow.sol" [label="implements", style=dotted, color="#808080"];
+    
+    // Comprehensive Library Usage
+    "WildcatMarketBase.sol" -> "MarketState.sol" [label="uses extensively", style=dashed, color="#87CEEB"];
+    "WildcatMarketBase.sol" -> "FeeMath.sol" [label="uses", style=dashed, color="#87CEEB"];
+    "WildcatMarketBase.sol" -> "SafeCastLib.sol" [label="uses", style=dashed, color="#87CEEB"];
+    "WildcatMarketBase.sol" -> "MathUtils.sol" [label="uses", style=dashed, color="#87CEEB"];
+    "WildcatMarketWithdrawals.sol" -> "Withdrawal.sol" [label="uses extensively", style=dashed, color="#87CEEB"];
+    "WildcatMarket.sol" -> "LibERC20.sol" [label="uses", style=dashed, color="#87CEEB"];
+    "WildcatMarket.sol" -> "BoolUtils.sol" [label="uses", style=dashed, color="#87CEEB"];
+    "HooksFactory.sol" -> "LibStoredInitCode.sol" [label="uses", style=dashed, color="#87CEEB"];
+    "AccessControlHooks.sol" -> "StringQuery.sol" [label="uses", style=dashed, color="#87CEEB"];
+    "WildcatMarket.sol" -> "ReentrancyGuard.sol" [label="inherits", style=dashed, color="#FF69B4"];
+    
+    // Type and Struct Usage
+    "WildcatMarket.sol" -> "HooksConfig.sol" [label="uses", style=dotted, color="#DDA0DD"];
+    "AccessControlHooks.sol" -> "LenderStatus.sol" [label="uses", style=dotted, color="#DDA0DD"];
+    "AccessControlHooks.sol" -> "RoleProvider.sol" [label="uses", style=dotted, color="#DDA0DD"];
+    "HooksFactory.sol" -> "TransientBytesArray.sol" [label="uses", style=dotted, color="#DDA0DD"];
+    
+    // Error and Event Usage
+    "WildcatMarket.sol" -> "MarketErrors.sol" [label="uses", style=dotted, color="#FFB6C1"];
+    "WildcatMarket.sol" -> "MarketEvents.sol" [label="uses", style=dotted, color="#FFB6C1"];
+    "AccessControlHooks.sol" -> "Errors.sol" [label="uses", style=dotted, color="#FFB6C1"];
+    
+    // Data Access and Lens Usage
+    "MarketLens.sol" -> "HooksDataStructs.sol" [label="returns", style=dotted, color="#20B2AA"];
+    
+    // 1. DEPLOYMENT FLOWS
+    "Protocol Owner" -> "WildcatArchController.sol" [label="1. Setup: registerBorrower()", color="#FF0000", style=bold];
+    "Protocol Owner" -> "HooksFactory.sol" [label="2. Setup: addHooksTemplate()", color="#FF0000", style=bold];
+    "Borrower" -> "HooksFactory.sol" [label="3. Deploy: deployHooksInstance()", color="#FF0000", style=bold];
+    "Borrower" -> "HooksFactory.sol" [label="4. Deploy: deployMarket()", color="#FF0000", style=bold];
+    "HooksFactory.sol" -> "WildcatArchController.sol" [label="5. Validate: check registration", color="#008000"];
+    "HooksFactory.sol" -> "AccessControlHooks.sol" [label="6. Create: deploy hooks instance", color="#FF0000", style=bold];
+    "HooksFactory.sol" -> "WildcatMarket.sol" [label="7. Create: deploy market", color="#FF0000", style=bold];
+    "WildcatMarket.sol" -> "WildcatArchController.sol" [label="8. Register: registerMarket()", color="#800080"];
+    
+    // 2. LENDER INTERACTION FLOWS
+    "Role Provider" -> "AccessControlHooks.sol" [label="Credential: grantRole()", color="#0000FF"];
+    "Lender" -> "AccessControlHooks.sol" [label="Request: pullProviderCredential()", color="#0000FF"];
+    "Lender" -> "WildcatMarket.sol" [label="Action: deposit()", color="#0000FF", style=bold];
+    "WildcatMarket.sol" -> "AccessControlHooks.sol" [label="Hook: onDeposit()", color="#008000"];
+    "AccessControlHooks.sol" -> "Role Provider" [label="Validate: validateCredential()", color="#008000"];
+    "AccessControlHooks.sol" -> "WildcatSanctionsSentinel.sol" [label="Check: isSanctioned()", color="#008000"];
+    "WildcatSanctionsSentinel.sol" -> "Chainalysis Oracle" [label="Oracle: sanctions check", color="#008000", style=dashed];
+    
+    // 3. BORROWING OPERATION FLOWS
+    "Borrower" -> "WildcatMarket.sol" [label="Borrow: borrow()", color="#800080", style=bold];
+    "Borrower" -> "WildcatMarket.sol" [label="Repay: repay()", color="#800080", style=bold];
+    "WildcatMarket.sol" -> "AccessControlHooks.sol" [label="Hook: onBorrow() / onRepay()", color="#008000"];
+    
+    // 4. EMERGENCY OPERATION FLOWS
+    "Borrower" -> "WildcatMarket.sol" [label="Emergency: rescueTokens()", color="#DC143C", style=bold];
+    "Borrower" -> "WildcatMarket.sol" [label="Emergency: forceBuyBack()", color="#DC143C", style=bold];
+    "Borrower" -> "WildcatMarketConfig.sol" [label="Emergency: nukeFromOrbit()", color="#DC143C", style=bold];
+    "Borrower" -> "AccessControlHooks.sol" [label="Manage: blockFromDeposits()", color="#DC143C"];
+    
+    // 5. MARKET OPERATION FLOWS
+    "WildcatMarket.sol" -> "WildcatMarketBase.sol" [label="State: _getUpdatedState()", color="#FFA500", weight=5];
+    "WildcatMarketBase.sol" -> "WildcatMarketBase.sol" [label="Persist: _writeState()", color="#FFA500", style=bold];
+    "WildcatMarket.sol" -> "WildcatMarketToken.sol" [label="Transfer: _transfer()", color="#FFA500"];
+    "WildcatMarket.sol" -> "WildcatMarketWithdrawals.sol" [label="Queue: queueWithdrawal()", color="#FFA500"];
+    
+    // 6. PARAMETER UPDATE FLOWS
+    "Borrower" -> "WildcatMarketConfig.sol" [label="Config: setAnnualInterestBips()", color="#800080", style=bold];
+    "WildcatMarketConfig.sol" -> "MarketConstraintHooks.sol" [label="Validate: onSetAnnualInterestBips()", color="#008000"];
+    "WildcatMarketConfig.sol" -> "FixedTermLoanHooks.sol" [label="Validate: onSetAnnualInterestBips()", color="#008000"];
+    "Borrower" -> "WildcatMarketConfig.sol" [label="Config: setMaxTotalSupply()", color="#800080"];
+    "Borrower" -> "WildcatMarketConfig.sol" [label="Config: setReserveRatioBips()", color="#800080"];
+    
+    // 7. WITHDRAWAL FLOWS
+    "Lender" -> "WildcatMarketWithdrawals.sol" [label="Request: queueWithdrawal()", color="#0000FF", style=bold];
+    "WildcatMarketWithdrawals.sol" -> "AccessControlHooks.sol" [label="Hook: onQueueWithdrawal()", color="#008000"];
+    "AccessControlHooks.sol" -> "FixedTermLoanHooks.sol" [label="Check: term constraints", color="#008000"];
+    "Lender" -> "WildcatMarketWithdrawals.sol" [label="Execute: executeWithdrawal()", color="#0000FF", style=bold];
+    "WildcatMarketWithdrawals.sol" -> "AccessControlHooks.sol" [label="Hook: onExecuteWithdrawal()", color="#008000"];
+    
+    // 8. SANCTIONS FLOWS
+    "WildcatSanctionsSentinel.sol" -> "WildcatSanctionsEscrow.sol" [label="Create: createEscrow()", color="#DC143C", style=bold];
+    "Borrower" -> "WildcatSanctionsSentinel.sol" [label="Override: overrideSanction()", color="#DC143C"];
+    "Borrower" -> "WildcatSanctionsEscrow.sol" [label="Release: releaseEscrow()", color="#DC143C"];
+    
+    // 9. FEE COLLECTION FLOWS
+    "Fee Recipient" -> "WildcatMarket.sol" [label="Collect: collectFees()", color="#DAA520", style=bold];
+    "Borrower" -> "WildcatMarket.sol" [label="Collect: collectFees()", color="#DAA520"];
+    "HooksFactory.sol" -> "Fee Recipient" [label="Pay: origination fees", color="#DAA520"];
+    "WildcatMarket.sol" -> "Fee Recipient" [label="Pay: protocol fees", color="#DAA520"];
+    
+    // 10. SPHEREX SECURITY FLOWS
+    "SphereX Engine" -> "WildcatMarket.sol" [label="Protect: all functions", color="#9370DB", style=dotted];
+    "SphereX Engine" -> "HooksFactory.sol" [label="Protect: deployments", color="#9370DB", style=dotted];
+    "WildcatMarket.sol" -> "SphereXProtectedRegisteredBase.sol" [label="Inherit: protection", style=dashed, color="#9370DB"];
+    
+    // 11. DATA ACCESS FLOWS
+    "MarketLens.sol" -> "WildcatMarket.sol" [label="Read: market data", color="#20B2AA", style=dotted];
+    "MarketLens.sol" -> "HooksFactory.sol" [label="Read: hooks data", color="#20B2AA", style=dotted];
+    "MarketLens.sol" -> "WildcatArchController.sol" [label="Read: registry data", color="#20B2AA", style=dotted];
+    "MarketLens.sol" -> "AccessControlHooks.sol" [label="Read: lender status", color="#20B2AA", style=dotted];
+    
+    // 12. HOOK MANAGEMENT FLOWS
+    "Borrower" -> "AccessControlHooks.sol" [label="Manage: addRoleProvider()", color="#800080"];
+    "Borrower" -> "AccessControlHooks.sol" [label="Manage: removeRoleProvider()", color="#800080"];
+    "Borrower" -> "FixedTermLoanHooks.sol" [label="Manage: setFixedTermEndTime()", color="#800080"];
+    "Borrower" -> "FixedTermLoanHooks.sol" [label="Manage: setMinimumDeposit()", color="#800080"];
+    
+    // 13. STATE PERSISTENCE FLOWS
+    "WildcatMarketBase.sol" -> "WildcatMarketToken.sol" [label="Update: scale factor", color="#32CD32"];
+    "WildcatMarketBase.sol" -> "WildcatMarketWithdrawals.sol" [label="Process: unpaid batches", color="#32CD32"];
+    "WildcatMarket.sol" -> "WildcatMarketConfig.sol" [label="Update: account authorization", color="#32CD32"];
+    
+    // 14. EXTERNAL INTEGRATIONS
+    "IRoleProvider.sol" -> "Role Provider" [label="Implement: credential logic", color="#FFA500", style=dashed];
+    "IChainalysisSanctionsList.sol" -> "Chainalysis Oracle" [label="Interface: sanctions data", color="#DC143C", style=dashed];
+    "ISphereXEngine.sol" -> "SphereX Engine" [label="Interface: security engine", color="#9370DB", style=dashed];
+}

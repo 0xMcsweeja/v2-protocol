@@ -1,0 +1,256 @@
+
+```mermaid
+erDiagram
+    WildcatArchController ||--o{ HooksFactory : "registers"
+    WildcatArchController ||--o{ WildcatMarket : "tracks"
+    WildcatArchController ||--o{ Borrower : "authorizes"
+    WildcatArchController ||--|| WildcatSanctionsSentinel : "references"
+    WildcatArchController ||--o{ Asset : "blacklists"
+    
+    HooksFactory ||--o{ HooksTemplate : "manages"
+    HooksFactory ||--o{ HooksInstance : "deploys"
+    HooksFactory ||--o{ WildcatMarket : "creates"
+    HooksFactory ||--|| MarketParametersTmp : "stores temporarily"
+    
+    HooksTemplate ||--o{ HooksInstance : "instantiated as"
+    HooksTemplate ||--|| ProtocolFeeConfiguration : "has fee config"
+    
+    HooksInstance ||--|| AccessControlHooks : "implements"
+    HooksInstance ||--|| MarketConstraintHooks : "implements"
+    HooksInstance ||--|| FixedTermLoanHooks : "implements"
+    HooksInstance ||--o{ IRoleProvider : "uses"
+    HooksInstance ||--|| HooksConfig : "configured with"
+    
+    WildcatMarket ||--|| WildcatMarketBase : "inherits"
+    WildcatMarket ||--|| WildcatMarketConfig : "inherits"
+    WildcatMarket ||--|| WildcatMarketToken : "inherits"
+    WildcatMarket ||--|| WildcatMarketWithdrawals : "inherits"
+    WildcatMarket ||--|| SphereXProtectedRegisteredBase : "inherits"
+    WildcatMarket ||--|| HooksInstance : "uses"
+    WildcatMarket ||--o{ WithdrawalBatch : "creates"
+    WildcatMarket ||--o{ Lender : "serves"
+    WildcatMarket ||--|| Borrower : "owned by"
+    WildcatMarket ||--|| FeeRecipient : "pays fees to"
+    WildcatMarket ||--|| MarketState : "maintains"
+    
+    WildcatMarketBase ||--|| MarketStateLib : "uses"
+    WildcatMarketBase ||--|| FeeMathLib : "uses"
+    WildcatMarketWithdrawals ||--|| WithdrawalLib : "uses"
+    
+    Borrower ||--o{ WildcatMarket : "deploys"
+    Borrower ||--o{ HooksInstance : "configures"
+    
+    Lender ||--o{ ScaledBalance : "holds"
+    Lender ||--o{ WithdrawalRequest : "creates"
+    Lender ||--|| LenderStatus : "has status"
+    Lender ||--o{ Credential : "obtains"
+    
+    IRoleProvider ||--o{ Credential : "issues"
+    IRoleProvider ||--o{ Lender : "validates"
+    IRoleProvider ||--|| RoleProviderConfig : "configured as"
+    
+    AccessControlHooks ||--o{ LenderStatus : "tracks"
+    AccessControlHooks ||--o{ RoleProviderConfig : "manages"
+    AccessControlHooks ||--o{ AccountApprovalStatus : "maintains"
+    
+    MarketConstraintHooks ||--|| MarketParameterConstraints : "enforces"
+    MarketConstraintHooks ||--o{ TemporaryReserveRatio : "manages"
+    
+    FixedTermLoanHooks ||--|| FixedTermConfig : "maintains"
+    
+    WildcatSanctionsSentinel ||--o{ WildcatSanctionsEscrow : "creates"
+    WildcatSanctionsSentinel ||--|| ChainalysisOracle : "queries"
+    WildcatSanctionsSentinel ||--o{ SanctionOverride : "manages"
+    
+    WithdrawalBatch ||--o{ WithdrawalRequest : "contains"
+    WithdrawalBatch ||--|| WithdrawalBatchStatus : "has status"
+    
+    MarketLens ||--|| WildcatMarket : "reads from"
+    MarketLens ||--|| HooksFactory : "reads from"
+    MarketLens ||--|| WildcatArchController : "reads from"
+    
+    WildcatArchController {
+        address owner
+        mapping registeredBorrowers
+        mapping registeredControllerFactories
+        mapping registeredControllers
+        mapping registeredMarkets
+        mapping blacklistedAssets
+        ProtocolFeeConfiguration protocolFeeConfiguration
+        address sphereXEngineSingleton
+    }
+    
+    HooksFactory {
+        address archController
+        mapping hooksTemplates
+        mapping deployedMarkets
+        mapping marketCountForBorrower
+        MarketParametersTmp _tmpMarketParameterStorage
+    }
+    
+    HooksTemplate {
+        string name
+        address implementation
+        bool enabled
+        uint16 originationFeeAsset
+        uint16 originationFeeToken
+        uint16 protocolFeeBips
+    }
+    
+    WildcatMarket {
+        address borrower
+        address asset
+        address hooks
+        address feeRecipient
+        uint16 protocolFeeBips
+        string marketToken
+        MarketState state
+        MarketState previousState
+    }
+    
+    MarketState {
+        bool isClosed
+        uint128 maxTotalSupply
+        uint128 accruedProtocolFees
+        uint128 normalizedUnclaimedWithdrawals
+        uint104 scaledTotalSupply
+        uint104 scaledPendingWithdrawals
+        uint32 pendingWithdrawalExpiry
+        bool isDelinquent
+        uint32 timeDelinquent
+        uint16 protocolFeeBips
+        uint16 annualInterestBips
+        uint16 reserveRatioBips
+        uint112 scaleFactor
+        uint32 lastInterestAccruedTimestamp
+    }
+    
+    HooksConfig {
+        bool useOnDeposit
+        bool useOnQueueWithdrawal
+        bool useOnExecuteWithdrawal
+        bool useOnTransfer
+        bool useOnBorrow
+        bool useOnRepay
+        bool useOnSetAnnualInterestBips
+        bool useOnSetReserveRatioBips
+        bool useOnSetMaxTotalSupply
+        bool useOnCloseMarket
+        bool useOnNukeFromOrbit
+        bool useOnSetProtocolFeeBips
+    }
+    
+    LenderStatus {
+        bool isApproved
+        address lastProvider
+        uint32 lastApprovalTimestamp
+        bool canRefresh
+    }
+    
+    RoleProviderConfig {
+        bool isActive
+        uint32 timeToLive
+        uint24 pullProviderIndex
+        bool canRefresh
+    }
+    
+    AccessControlHooks {
+        mapping _roleProviders
+        mapping _lenderStatus
+        mapping _accountApprovalStatus
+        address[] _pullProviders
+    }
+    
+    MarketConstraintHooks {
+        MarketParameterConstraints constraints
+        mapping _temporaryReserveRatio
+    }
+    
+    MarketParameterConstraints {
+        uint16 minimumAnnualInterestBips
+        uint16 maximumAnnualInterestBips
+        uint16 minimumReserveRatioBips
+        uint16 maximumReserveRatioBips
+        uint32 minimumDelinquencyGracePeriod
+        uint32 maximumDelinquencyGracePeriod
+        uint32 minimumWithdrawalBatchDuration
+        uint32 maximumWithdrawalBatchDuration
+        uint128 minimumMaxTotalSupply
+        uint128 maximumMaxTotalSupply
+    }
+    
+    FixedTermLoanHooks {
+        uint32 fixedTermEndTime
+        uint256 minimumDeposit
+        bool canReduceFixedTerm
+    }
+    
+    IRoleProvider {
+        bool isPullProvider
+        function getCredential()
+        function validateCredential()
+    }
+    
+    Borrower {
+        address borrowerAddress
+        bool isRegistered
+    }
+    
+    Lender {
+        address lenderAddress
+        uint256 scaledBalance
+    }
+    
+    ScaledBalance {
+        uint104 scaledAmount
+        address account
+    }
+    
+    Credential {
+        address provider
+        address account
+        uint256 timestamp
+        uint256 expiry
+        bytes32 credentialData
+    }
+    
+    WithdrawalBatch {
+        uint32 expiry
+        uint104 scaledTotalAmount
+        uint104 scaledAmountBurned
+        uint128 normalizedAmountPaid
+    }
+    
+    WithdrawalRequest {
+        uint104 scaledAmount
+        uint128 normalizedAmountWithdrawn
+    }
+    
+    WildcatSanctionsSentinel {
+        address _chainalysisSanctionsList
+        mapping _sanctionOverrides
+        mapping _escrowContracts
+    }
+    
+    WildcatSanctionsEscrow {
+        address sentinel
+        address borrower
+        address account
+        address asset
+        uint256 balance
+    }
+    
+    SanctionOverride {
+        bool isActive
+        uint256 timestamp
+    }
+    
+    MarketLens {
+        function getMarketsForBorrower()
+        function getMarketsForHooksTemplate()
+        function getMarketData()
+        function getLenderData()
+        function getWithdrawalBatchesData()
+        function getHooksTemplateDetails()
+    }
+```

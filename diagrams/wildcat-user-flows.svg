@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 1400">
+  <defs>
+    <style>
+      .title { font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; }
+      .flow-title { font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; }
+      .actor { fill: #2196F3; }
+      .contract { fill: #4CAF50; }
+      .external { fill: #9C27B0; }
+      .text { font-family: Arial, sans-serif; font-size: 14px; text-anchor: middle; }
+      .small-text { font-family: Arial, sans-serif; font-size: 12px; text-anchor: middle; }
+      .label-text { font-family: Arial, sans-serif; font-size: 11px; }
+      .flow-line { fill: none; stroke: #333; stroke-width: 2; }
+      .dashed-line { fill: none; stroke: #666; stroke-width: 1; stroke-dasharray: 5,5; }
+      .action-box { fill: #FFF; stroke: #333; stroke-width: 1; }
+      .success-box { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
+      .warning-box { fill: #FFF3E0; stroke: #FF9800; stroke-width: 2; }
+      .error-box { fill: #FFEBEE; stroke: #F44336; stroke-width: 2; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#333"/>
+    </marker>
+  </defs>
+  
+  <!-- Title -->
+  <text x="900" y="40" class="title">Wildcat Protocol V2 - User Flows</text>
+  
+  <!-- Borrower Flow -->
+  <g id="borrower-flow">
+    <text x="400" y="100" class="flow-title">Borrower Flow</text>
+    
+    <!-- Actors -->
+    <circle cx="100" cy="150" r="30" class="actor"/>
+    <text x="100" y="155" class="text" fill="white">B</text>
+    <text x="100" y="195" class="small-text">Borrower</text>
+    
+    <!-- Timeline -->
+    <line x1="100" y1="180" x2="100" y2="900" class="dashed-line"/>
+    <line x1="300" y1="180" x2="300" y2="900" class="dashed-line"/>
+    <line x1="500" y1="180" x2="500" y2="900" class="dashed-line"/>
+    <line x1="700" y1="180" x2="700" y2="900" class="dashed-line"/>
+    
+    <!-- Contract headers -->
+    <rect x="250" y="130" width="100" height="40" class="contract" rx="5"/>
+    <text x="300" y="155" class="text" fill="white">Arch</text>
+    
+    <rect x="450" y="130" width="100" height="40" class="contract" rx="5"/>
+    <text x="500" y="155" class="text" fill="white">Factory</text>
+    
+    <rect x="650" y="130" width="100" height="40" class="contract" rx="5"/>
+    <text x="700" y="155" class="text" fill="white">Market</text>
+    
+    <!-- Step 1: Registration -->
+    <rect x="150" y="220" width="100" height="30" class="action-box" rx="3"/>
+    <text x="200" y="240" class="small-text">Register</text>
+    <path d="M 100 235 L 290 235" class="flow-line" marker-end="url(#arrowhead)"/>
+    <text x="195" y="230" class="label-text">registerBorrower()</text>
+    
+    <!-- Step 2: Deploy Hooks -->
+    <rect x="150" y="280" width="100" height="30" class="action-box" rx="3"/>
+    <text x="200" y="300" class="small-text">Deploy Hooks</text>
+    <path d="M 100 295 L 490 295" class="flow-line" marker-end="url(#arrowhead)"/>
+    <text x="295" y="290" class="label-text">deployHooksInstance()</text>
+    
+    <!-- Step 3: Deploy Market -->
+    <rect x="350" y="340" width="100" height="30" class="action-box" rx="3"/>
+    <text x="400" y="360" class="small-text">Deploy Market</text>
+    <path d="M 100 355 L 490 355" class="flow-line" marker-end="url(#arrowhead)"/>
+    <text x="295" y="350" class="label-text">deployMarket()</text>
+    <path d="M 510 355 L 690 355" class="flow-line" marker-end="url(#arrowhead)" stroke="#4CAF50"/>
+    <text x="600" y="350" class="label-text">creates</text>
+    
+    <!-- Step 4: Borrow -->
+    <rect x="550" y="420" width="100" height="30" class="success-box" rx="3"/>
+    <text x="600" y="440" class="small-text">Borrow</text>
+    <path d="M 100 435 L 690 435" class="flow-line" marker-end="url(#arrowhead)"/>
+    <text x="395" y="430" class="label-text">borrow(amount)</text>
+    
+    <!-- Step 5: Manage Parameters -->
+    <rect x="550" y="500" width="100" height="30" class="action-box" rx="3"/>
+    <text x="600" y="520" class="small-text">Update APR</text>
+    <path d="M 100 515 L 690 515" class="flow-line" marker-end="url(#arrowhead)"/>
+    <text x="395" y="510" class="label-text">setAnnualInterestAndReserveRatioBips()</text>
+    
+    <!-- Step 6: Repay -->
+    <rect x="550" y="580" width="100" height="30" class="success-box" rx="3"/>
+    <text x="600" y="600" class="small-text">Repay</text>
+    <path d="M 100 595 L 690 595" class="flow-line" marker-end="url(#arrowhead)"/>
+    <text x="395" y="590" class="label-text">repay(amount)</text>
+    
+    <!-- Step 7: Handle Delinquency -->
+    <rect x="550" y="660" width="100" height="30" class="warning-box" rx="3"/>
+    <text x="600" y="680" class="small-text">Delinquent</text>
+    <path d="M 710 675 L 100 675" class="flow-line" stroke="#FF9800"/>
+    <text x="395" y="670" class="label-text">if reserve < required</text>
+    
+    <!-- Step 8: Close Market -->
+    <rect x="550" y="740" width="100" height="30" class="action-box" rx="3"/>
+    <text x="600" y="760" class="small-text">Close Market</text>
+    <path d="M 100 755 L 690 755" class="flow-line" marker-end="url(#arrowhead)"/>
+    <text x="395" y="750" class="label-text">closeMarket()</text>
+  </g>
+  
+  <!-- Lender Flow -->
+  <g id="lender-flow" transform="translate(800, 0)">
+    <text x="450" y="100" class="flow-title">Lender Flow</text>
+    
+    <!-- Actors -->
+    <circle cx="100" cy="150" r="30" class="actor"/>
+    <text x="100" y="155" class="text" fill="white">L</text>
+    <text x="100" y="195" class="small-text">Lender</text>
+    
+    <!-- Timeline -->
+    <line x1="100" y1="180" x2="100" y2="900" class="dashed-line"/>
+    <line x1="300" y1="180" x2="300" y2="900" class="dashed-line"/>
+    <line x1="500" y1="180" x2="500" y2="900" class="dashed-line"/>
+    <line x1="700" y1="180" x2="700" y2="900" class="dashed-line"/>
+    
+    <!-- Contract headers -->
+    <rect x="250" y="130" width="100" height="40" class="external" rx="5"/>
+    <text x="300" y="155" class="text" fill="white">Provider</text>
+    
+    <rect x="450" y="130" width="100" height="40" class="contract" rx="5"/>
+    <text x="500" y="155" class="text" fill="white">Hooks</text>
+    
+    <rect x="650" y="130" width="100" height="40" class="contract" rx="5"/>
+    <text x="700" y="155" class="text" fill="white">Market</text>
+    
+    <!-- Step 1: Get Credentials -->
+    <rect x="150" y="220" width="100" height="30" class="action-box" rx="3"/>
+    <text x="200" y="240" class="small-text">Get Creds</text>
+    <path d="M 100 235 L 290 235" class="flow-line" marker-end="url(#arrowhead)"/>
+    <text x="195" y="230" class="label-text">KYC/verify</text>
+    
+    <!-- Step 2: Deposit -->
+    <rect x="550" y="280" width="100" height="30" class="success-box" rx="3"/>
+    <text x="600" y="300" class="small-text">Deposit</text>
+    <path d="M 100 295 L 690 295" class="flow-line" marker-end="url(#arrowhead)"/>
+    <text x="395" y="290" class="label-text">depositUpTo(amount)</text>
+    <path d="M 500 315 L 500 335" class="flow-line" stroke="#9C27B0"/>
+    <text x="520" y="330" class="label-text">onDeposit()</text>
+    
+    <!-- Step 3: Receive Tokens -->
+    <rect x="550" y="360" width="100" height="30" class="success-box" rx="3"/>
+    <text x="600" y="380" class="small-text">Get Tokens</text>
+    <path d="M 710 375 L 100 375" class="flow-line" stroke="#4CAF50"/>
+    <text x="395" y="370" class="label-text">mint market tokens</text>
+    
+    <!-- Step 4: Request Withdrawal -->
+    <rect x="550" y="440" width="100" height="30" class="action-box" rx="3"/>
+    <text x="600" y="460" class="small-text">Queue W/D</text>
+    <path d="M 100 455 L 690 455" class="flow-line" marker-end="url(#arrowhead)"/>
+    <text x="395" y="450" class="label-text">queueWithdrawal(amount)</text>
+    
+    <!-- Step 5: Wait for Batch -->
+    <rect x="350" y="520" width="100" height="30" class="warning-box" rx="3"/>
+    <text x="400" y="540" class="small-text">Wait Batch</text>
+    <text x="400" y="570" class="label-text">withdrawal cycle</text>
+    <text x="400" y="585" class="label-text">(~24 hours)</text>
+    
+    <!-- Step 6: Execute Withdrawal -->
+    <rect x="550" y="620" width="100" height="30" class="success-box" rx="3"/>
+    <text x="600" y="640" class="small-text">Execute W/D</text>
+    <path d="M 100 635 L 690 635" class="flow-line" marker-end="url(#arrowhead)"/>
+    <text x="395" y="630" class="label-text">executeWithdrawal()</text>
+    
+    <!-- Step 7: Transfer Tokens -->
+    <rect x="550" y="700" width="100" height="30" class="action-box" rx="3"/>
+    <text x="600" y="720" class="small-text">Transfer</text>
+    <path d="M 100 715 L 690 715" class="flow-line" marker-end="url(#arrowhead)"/>
+    <text x="395" y="710" class="label-text">transfer(to, amount)</text>
+    <path d="M 500 735 L 500 755" class="flow-line" stroke="#9C27B0"/>
+    <text x="520" y="750" class="label-text">onTransfer()</text>
+  </g>
+  
+  <!-- Sanctioned Lender Flow -->
+  <g id="sanctioned-flow" transform="translate(0, 950)">
+    <text x="400" y="50" class="flow-title">Sanctioned Lender Flow</text>
+    
+    <!-- Actors -->
+    <circle cx="100" cy="100" r="30" class="actor"/>
+    <text x="100" y="105" class="text" fill="white">SL</text>
+    <text x="100" y="145" class="small-text">Sanctioned</text>
+    
+    <!-- Timeline -->
+    <line x1="100" y1="130" x2="100" y2="400" class="dashed-line"/>
+    <line x1="300" y1="130" x2="300" y2="400" class="dashed-line"/>
+    <line x1="500" y1="130" x2="500" y2="400" class="dashed-line"/>
+    <line x1="700" y1="130" x2="700" y2="400" class="dashed-line"/>
+    <line x1="900" y1="130" x2="900" y2="400" class="dashed-line"/>
+    
+    <!-- Contract headers -->
+    <rect x="250" y="80" width="100" height="40" class="contract" rx="5"/>
+    <text x="300" y="105" class="text" fill="white">Market</text>
+    
+    <rect x="450" y="80" width="100" height="40" fill="#E91E63" rx="5"/>
+    <text x="500" y="105" class="text" fill="white">Sentinel</text>
+    
+    <rect x="650" y="80" width="100" height="40" fill="#9C27B0" rx="5"/>
+    <text x="700" y="105" class="text" fill="white">Chainalysis</text>
+    
+    <rect x="850" y="80" width="100" height="40" fill="#E91E63" rx="5"/>
+    <text x="900" y="105" class="text" fill="white">Escrow</text>
+    
+    <!-- Step 1: Try Withdrawal -->
+    <rect x="150" y="170" width="100" height="30" class="error-box" rx="3"/>
+    <text x="200" y="190" class="small-text">Withdraw</text>
+    <path d="M 100 185 L 290 185" class="flow-line" marker-end="url(#arrowhead)"/>
+    
+    <!-- Step 2: Check Sanctions -->
+    <path d="M 310 185 L 490 185" class="flow-line" marker-end="url(#arrowhead)"/>
+    <text x="395" y="180" class="label-text">check</text>
+    <path d="M 510 185 L 690 185" class="flow-line" marker-end="url(#arrowhead)"/>
+    <text x="595" y="180" class="label-text">isSanctioned()</text>
+    
+    <!-- Step 3: Return Sanctioned -->
+    <path d="M 690 205 L 510 205" class="flow-line" stroke="#F44336"/>
+    <text x="600" y="200" class="label-text">true</text>
+    
+    <!-- Step 4: Create Escrow -->
+    <path d="M 500 225 L 890 225" class="flow-line" marker-end="url(#arrowhead)"/>
+    <text x="695" y="220" class="label-text">createEscrow()</text>
+    
+    <!-- Step 5: Block Withdrawal -->
+    <rect x="750" y="260" width="100" height="30" class="error-box" rx="3"/>
+    <text x="800" y="280" class="small-text">Blocked</text>
+    <path d="M 900 275 L 310 275" class="flow-line" stroke="#F44336"/>
+    
+    <!-- Step 6: If Removed from List -->
+    <rect x="550" y="320" width="150" height="30" class="success-box" rx="3"/>
+    <text x="625" y="340" class="small-text">Removed from list</text>
+    
+    <!-- Step 7: Can Withdraw -->
+    <rect x="750" y="370" width="100" height="30" class="success-box" rx="3"/>
+    <text x="800" y="390" class="small-text">Released</text>
+    <path d="M 100 385 L 890 385" class="flow-line" marker-end="url(#arrowhead)"/>
+    <text x="495" y="380" class="label-text">releaseEscrow()</text>
+  </g>
+  
+  <!-- Hook Interactions Detail -->
+  <g id="hooks-detail" transform="translate(1200, 950)">
+    <rect x="0" y="0" width="550" height="400" fill="#F5F5F5" stroke="#999" stroke-width="2" rx="5"/>
+    <text x="275" y="30" class="flow-title">Hook Interaction Points</text>
+    
+    <text x="20" y="60" class="small-text" text-anchor="start" font-weight="bold">Market Action → Hook Called</text>
+    
+    <text x="20" y="85" class="small-text" text-anchor="start">• deposit() → onDeposit(lender, amount, data)</text>
+    <text x="20" y="105" class="small-text" text-anchor="start">• queueWithdrawal() → onQueueWithdrawal(lender, expiry, amount, data)</text>
+    <text x="20" y="125" class="small-text" text-anchor="start">• executeWithdrawal() → onExecuteWithdrawal(lender, amount, data)</text>
+    <text x="20" y="145" class="small-text" text-anchor="start">• transfer() → onTransfer(from, to, amount, data)</text>
+    <text x="20" y="165" class="small-text" text-anchor="start">• borrow() → onBorrow(amount, data)</text>
+    <text x="20" y="185" class="small-text" text-anchor="start">• repay() → onRepay(amount, data)</text>
+    <text x="20" y="205" class="small-text" text-anchor="start">• closeMarket() → onCloseMarket(data)</text>
+    <text x="20" y="225" class="small-text" text-anchor="start">• setMaxTotalSupply() → onSetMaxTotalSupply(capacity, data)</text>
+    <text x="20" y="245" class="small-text" text-anchor="start">• setAnnualInterest...() → onSetAnnualInterest...(apr, reserve, data)</text>
+    
+    <text x="20" y="280" class="small-text" text-anchor="start" font-weight="bold">Hook Capabilities</text>
+    <text x="20" y="305" class="small-text" text-anchor="start">✓ Revert to block action</text>
+    <text x="20" y="325" class="small-text" text-anchor="start">✓ Check credentials/roles</text>
+    <text x="20" y="345" class="small-text" text-anchor="start">✓ Modify APR/reserve ratio (only in onSetAnnualInterest...)</text>
+    <text x="20" y="365" class="small-text" text-anchor="start">✗ Cannot modify other state</text>
+    <text x="20" y="385" class="small-text" text-anchor="start">✗ Cannot perform actions</text>
+  </g>
+</svg>

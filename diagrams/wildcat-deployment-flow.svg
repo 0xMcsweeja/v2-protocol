@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1200">
+  <defs>
+    <style>
+      .title { font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; }
+      .section-title { font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; }
+      .step { fill: #E8F4FD; stroke: #2196F3; stroke-width: 2; }
+      .admin { fill: #FFEBEE; stroke: #F44336; stroke-width: 2; }
+      .borrower { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
+      .factory { fill: #FFF3E0; stroke: #FF9800; stroke-width: 2; }
+      .hook { fill: #F3E5F5; stroke: #9C27B0; stroke-width: 2; }
+      .market { fill: #E0F2F1; stroke: #009688; stroke-width: 2; }
+      .text { font-family: Arial, sans-serif; font-size: 14px; text-anchor: middle; }
+      .small-text { font-family: Arial, sans-serif; font-size: 12px; text-anchor: middle; }
+      .tiny-text { font-family: Arial, sans-serif; font-size: 10px; }
+      .arrow { fill: none; stroke: #333; stroke-width: 2; marker-end: url(#arrowhead); }
+      .create2-arrow { fill: none; stroke: #FF9800; stroke-width: 2; stroke-dasharray: 5,5; marker-end: url(#create2-arrowhead); }
+      .code-box { fill: #263238; stroke: #37474F; stroke-width: 1; }
+      .code-text { font-family: 'Courier New', monospace; font-size: 11px; fill: #B2FF59; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#333"/>
+    </marker>
+    <marker id="create2-arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#FF9800"/>
+    </marker>
+  </defs>
+  
+  <!-- Title -->
+  <text x="800" y="40" class="title">Wildcat Protocol - Deployment Flow</text>
+  
+  <!-- Phase 1: Protocol Setup -->
+  <g id="phase1">
+    <text x="200" y="100" class="section-title">Phase 1: Protocol Setup (Admin)</text>
+    
+    <rect x="50" y="120" width="300" height="60" class="admin" rx="5"/>
+    <text x="200" y="150" class="text">Deploy Core Contracts</text>
+    <text x="200" y="165" class="small-text">ArchController, Sentinel, Factory</text>
+    
+    <rect x="50" y="200" width="300" height="60" class="admin" rx="5"/>
+    <text x="200" y="230" class="text">Deploy Hook Templates</text>
+    <text x="200" y="245" class="small-text">AccessControl, FixedTermLoan, etc.</text>
+    
+    <rect x="50" y="280" width="300" height="60" class="admin" rx="5"/>
+    <text x="200" y="310" class="text">Register Templates</text>
+    <text x="200" y="325" class="small-text">factory.registerHooksTemplate()</text>
+    
+    <path d="M 200 180 L 200 200" class="arrow"/>
+    <path d="M 200 260 L 200 280" class="arrow"/>
+  </g>
+  
+  <!-- Phase 2: Borrower Registration -->
+  <g id="phase2">
+    <text x="600" y="100" class="section-title">Phase 2: Borrower Registration</text>
+    
+    <rect x="450" y="120" width="300" height="60" class="borrower" rx="5"/>
+    <text x="600" y="150" class="text">Borrower Applies</text>
+    <text x="600" y="165" class="small-text">Off-chain KYC/verification</text>
+    
+    <rect x="450" y="200" width="300" height="60" class="admin" rx="5"/>
+    <text x="600" y="230" class="text">Admin Approves</text>
+    <text x="600" y="245" class="small-text">archController.registerBorrower()</text>
+    
+    <path d="M 600 180 L 600 200" class="arrow"/>
+  </g>
+  
+  <!-- Phase 3: Hooks Deployment -->
+  <g id="phase3">
+    <text x="200" y="400" class="section-title">Phase 3: Hooks Instance Deployment</text>
+    
+    <rect x="50" y="430" width="300" height="80" class="borrower" rx="5"/>
+    <text x="200" y="460" class="text">Borrower Deploys Hooks</text>
+    <text x="200" y="480" class="small-text">factory.deployHooksInstance()</text>
+    <text x="200" y="495" class="small-text">Configures access rules</text>
+    
+    <rect x="400" y="430" width="300" height="80" class="factory" rx="5"/>
+    <text x="550" y="460" class="text">Factory Creates Instance</text>
+    <text x="550" y="480" class="small-text">Uses LibStoredInitCode</text>
+    <text x="550" y="495" class="small-text">CREATE2 with custom salt</text>
+    
+    <rect x="750" y="430" width="300" height="80" class="hook" rx="5"/>
+    <text x="900" y="460" class="text">Hooks Instance</text>
+    <text x="900" y="480" class="small-text">Unique per borrower</text>
+    <text x="900" y="495" class="small-text">Contains access rules</text>
+    
+    <path d="M 350 470 L 400 470" class="arrow"/>
+    <path d="M 700 470 L 750 470" class="create2-arrow"/>
+  </g>
+  
+  <!-- Phase 4: Market Deployment -->
+  <g id="phase4">
+    <text x="200" y="570" class="section-title">Phase 4: Market Deployment</text>
+    
+    <rect x="50" y="600" width="300" height="100" class="borrower" rx="5"/>
+    <text x="200" y="630" class="text">Borrower Deploys Market</text>
+    <text x="200" y="650" class="small-text">factory.deployMarket()</text>
+    <text x="60" y="670" class="tiny-text">• asset, namePrefix, symbolPrefix</text>
+    <text x="60" y="685" class="tiny-text">• maxTotalSupply, APR, reserveRatio</text>
+    <text x="60" y="700" class="tiny-text">• hooks instance, salt</text>
+    
+    <rect x="400" y="600" width="300" height="100" class="factory" rx="5"/>
+    <text x="550" y="630" class="text">Factory Validates & Creates</text>
+    <text x="550" y="650" class="small-text">Checks parameters</text>
+    <text x="550" y="670" class="small-text">Computes CREATE2 address</text>
+    <text x="550" y="690" class="small-text">Deploys market contract</text>
+    
+    <rect x="750" y="600" width="300" height="100" class="market" rx="5"/>
+    <text x="900" y="630" class="text">Market Contract</text>
+    <text x="900" y="650" class="small-text">Unique address</text>
+    <text x="900" y="670" class="small-text">Linked to hooks instance</text>
+    <text x="900" y="690" class="small-text">Ready for deposits</text>
+    
+    <path d="M 350 650 L 400 650" class="arrow"/>
+    <path d="M 700 650 L 750 650" class="create2-arrow"/>
+  </g>
+  
+  <!-- CREATE2 Address Calculation -->
+  <g id="create2-details">
+    <rect x="1150" y="120" width="400" height="350" class="code-box" rx="5"/>
+    <text x="1350" y="145" class="text" fill="white">CREATE2 Address Calculation</text>
+    
+    <text x="1170" y="170" class="code-text">// Hooks Instance Address</text>
+    <text x="1170" y="185" class="code-text">bytes32 salt = keccak256(abi.encode(</text>
+    <text x="1170" y="200" class="code-text">  hooksTemplate,</text>
+    <text x="1170" y="215" class="code-text">  hooksInstanceSalt</text>
+    <text x="1170" y="230" class="code-text">));</text>
+    <text x="1170" y="250" class="code-text">address = CREATE2(</text>
+    <text x="1170" y="265" class="code-text">  factory,</text>
+    <text x="1170" y="280" class="code-text">  salt,</text>
+    <text x="1170" y="295" class="code-text">  initCode</text>
+    <text x="1170" y="310" class="code-text">);</text>
+    
+    <text x="1170" y="340" class="code-text">// Market Address</text>
+    <text x="1170" y="355" class="code-text">bytes32 marketSalt = keccak256(</text>
+    <text x="1170" y="370" class="code-text">  abi.encode(</text>
+    <text x="1170" y="385" class="code-text">    asset, namePrefix, symbolPrefix,</text>
+    <text x="1170" y="400" class="code-text">    hooksInstance, feeRecipient,</text>
+    <text x="1170" y="415" class="code-text">    maxTotalSupply, APR, reserveRatio,</text>
+    <text x="1170" y="430" class="code-text">    salt</text>
+    <text x="1170" y="445" class="code-text">  )</text>
+    <text x="1170" y="460" class="code-text">);</text>
+  </g>
+  
+  <!-- Key Features -->
+  <g id="key-features">
+    <rect x="50" y="750" width="500" height="200" fill="#F5F5F5" stroke="#999" stroke-width="2" rx="5"/>
+    <text x="300" y="780" class="section-title">Deployment Features</text>
+    
+    <text x="70" y="810" class="small-text" text-anchor="start">✓ Deterministic addresses via CREATE2</text>
+    <text x="70" y="830" class="small-text" text-anchor="start">✓ Custom salts for collision avoidance</text>
+    <text x="70" y="850" class="small-text" text-anchor="start">✓ Gas-efficient template cloning</text>
+    <text x="70" y="870" class="small-text" text-anchor="start">✓ Stored initcode for large contracts</text>
+    <text x="70" y="890" class="small-text" text-anchor="start">✓ One hooks instance → many markets</text>
+    <text x="70" y="910" class="small-text" text-anchor="start">✓ Parameters validated at deployment</text>
+    <text x="70" y="930" class="small-text" text-anchor="start">✓ Protocol fees set per template</text>
+  </g>
+  
+  <!-- Security Checks -->
+  <g id="security-checks">
+    <rect x="600" y="750" width="500" height="200" fill="#FFEBEE" stroke="#F44336" stroke-width="2" rx="5"/>
+    <text x="850" y="780" class="section-title">Security Checks</text>
+    
+    <text x="620" y="810" class="small-text" text-anchor="start">• Borrower must be registered on ArchController</text>
+    <text x="620" y="830" class="small-text" text-anchor="start">• Hooks template must be approved</text>
+    <text x="620" y="850" class="small-text" text-anchor="start">• Market parameters within allowed bounds</text>
+    <text x="620" y="870" class="small-text" text-anchor="start">• Asset must be valid ERC20</text>
+    <text x="620" y="890" class="small-text" text-anchor="start">• Names/symbols must not collide</text>
+    <text x="620" y="910" class="small-text" text-anchor="start">• Hooks instance must be valid</text>
+    <text x="620" y="930" class="small-text" text-anchor="start">• Fee recipient must be set correctly</text>
+  </g>
+  
+  <!-- Flow Summary -->
+  <g id="flow-summary">
+    <rect x="1150" y="550" width="400" height="400" fill="#E8F5E9" stroke="#4CAF50" stroke-width="2" rx="5"/>
+    <text x="1350" y="580" class="section-title">Complete Flow</text>
+    
+    <circle cx="1180" cy="610" r="5" fill="#F44336"/>
+    <text x="1200" y="615" class="small-text" text-anchor="start">1. Admin deploys protocol</text>
+    
+    <circle cx="1180" cy="640" r="5" fill="#F44336"/>
+    <text x="1200" y="645" class="small-text" text-anchor="start">2. Admin deploys hook templates</text>
+    
+    <circle cx="1180" cy="670" r="5" fill="#F44336"/>
+    <text x="1200" y="675" class="small-text" text-anchor="start">3. Admin registers templates</text>
+    
+    <circle cx="1180" cy="700" r="5" fill="#4CAF50"/>
+    <text x="1200" y="705" class="small-text" text-anchor="start">4. Borrower gets registered</text>
+    
+    <circle cx="1180" cy="730" r="5" fill="#4CAF50"/>
+    <text x="1200" y="735" class="small-text" text-anchor="start">5. Borrower deploys hooks instance</text>
+    
+    <circle cx="1180" cy="760" r="5" fill="#4CAF50"/>
+    <text x="1200" y="765" class="small-text" text-anchor="start">6. Borrower configures access rules</text>
+    
+    <circle cx="1180" cy="790" r="5" fill="#4CAF50"/>
+    <text x="1200" y="795" class="small-text" text-anchor="start">7. Borrower deploys market(s)</text>
+    
+    <circle cx="1180" cy="820" r="5" fill="#2196F3"/>
+    <text x="1200" y="825" class="small-text" text-anchor="start">8. Lenders can now deposit</text>
+    
+    <circle cx="1180" cy="850" r="5" fill="#4CAF50"/>
+    <text x="1200" y="855" class="small-text" text-anchor="start">9. Borrower can borrow</text>
+    
+    <text x="1180" y="890" class="small-text" text-anchor="start" font-weight="bold">Result:</text>
+    <text x="1180" y="910" class="small-text" text-anchor="start">• Borrower controls their markets</text>
+    <text x="1180" y="930" class="small-text" text-anchor="start">• Access rules enforced by hooks</text>
+  </g>
+  
+  <!-- Connections between phases -->
+  <path d="M 350 160 L 450 160" class="arrow"/>
+  <path d="M 200 340 L 200 430" class="arrow"/>
+  <path d="M 900 510 L 900 530 L 200 530 L 200 600" class="arrow"/>
+</svg>

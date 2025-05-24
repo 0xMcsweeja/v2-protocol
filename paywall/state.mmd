@@ -1,0 +1,50 @@
+stateDiagram-v2
+    [*] --> Undeployed : Market Template Created
+
+    Undeployed --> Deployed : deployMarket()
+    Deployed --> Active : First Deposit
+
+    Active --> Delinquent : Reserve Ratio Breached
+    Active --> ClosedByBorrower : closeMarket()
+
+    Delinquent --> GracePeriod : Grace Tracker Started
+    Delinquent --> Active : Borrower Repays
+
+    GracePeriod --> PenaltyAPR : Grace Period Exceeded
+    GracePeriod --> Active : Borrower Repays
+
+    PenaltyAPR --> Active : Borrower Repays
+    PenaltyAPR --> ClosedByBorrower : closeMarket()
+
+    ClosedByBorrower --> FullyWithdrawn : All Lenders Exit
+    FullyWithdrawn --> Terminated : No Outstanding Debt
+    Terminated --> [*]
+
+    state Active {
+        [*] --> Normal
+        Normal --> WithdrawalsPending : queueWithdrawal()
+        WithdrawalsPending --> ProcessingWithdrawals : Withdrawal Cycle Ends
+        ProcessingWithdrawals --> Normal : executeWithdrawal()
+        
+        Normal --> CapacityUpdate : setMaxTotalSupply()
+        CapacityUpdate --> Normal : Update Complete
+        
+        Normal --> RateUpdate : setAnnualInterestBips()
+        RateUpdate --> Normal : Update Complete
+    }
+
+    state Delinquent {
+        [*] --> TrackingGrace
+        TrackingGrace --> GraceIncrementing : Each Update
+        GraceIncrementing --> TrackingGrace : Time Passes
+    }
+
+    state Hooks_Lifecycle {
+        [*] --> HooksUndeployed
+        HooksUndeployed --> HooksDeployed : deployHooks()
+        HooksDeployed --> HooksActive : First Market Uses
+        HooksActive --> HooksUpdated : updateHooksConfig()
+        HooksUpdated --> HooksActive : Config Applied
+        HooksActive --> HooksDeprecated : No Active Markets
+        HooksDeprecated --> [*]
+    }

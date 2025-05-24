@@ -1,0 +1,122 @@
+C4Container
+  title Container diagram for Wildcat V2 Protocol - Decentralized Lending Platform
+
+  Person(protocolOwner, "Protocol Owner", "DAO/Multisig that controls protocol governance")
+  Person(borrower, "Borrower", "Registered entity that deploys markets and manages lending")
+  Person(lender, "Lender", "Authorized user who provides liquidity to markets")
+  Person(roleProvider, "Role Provider", "External credential provider for lender authorization")
+
+  System_Ext(chainalysis, "Chainalysis Oracle", "Real-time sanctions screening service")
+  System_Ext(sphereX, "SphereX Engine", "MEV and transaction protection service")
+  System_Ext(erc20Assets, "ERC20 Assets", "External token contracts")
+
+  Enterprise_Boundary(wildcatProtocol, "Wildcat V2 Protocol") {
+    
+    Container_Boundary(coreInfrastructure, "Core Infrastructure") {
+      Container(archController, "Arch Controller", "Solidity Contract", "Central registry for borrowers, markets, and protocol configuration")
+      Container(hooksFactory, "Hooks Factory", "Solidity Contract", "Deploys hook instances and markets with configuration templates")
+    }
+
+    Container_Boundary(marketSystem, "Market Contract System") {
+      Container(wildcatMarket, "Wildcat Market", "Solidity Contract", "Main market contract handling deposits, withdrawals, borrowing")
+      Container(marketBase, "Market Base", "Solidity Contract", "Core state management and calculations")
+      Container(marketConfig, "Market Config", "Solidity Contract", "Parameter management and borrower controls")
+      Container(marketToken, "Market Token", "Solidity Contract", "ERC20 implementation for market shares")
+      Container(marketWithdrawals, "Market Withdrawals", "Solidity Contract", "Withdrawal queue and batch processing")
+    }
+
+    Container_Boundary(hooksSystem, "Hooks System") {
+      Container(accessControlHooks, "Access Control Hooks", "Solidity Contract", "Lender authorization and role management")
+      Container(constraintHooks, "Constraint Hooks", "Solidity Contract", "Market parameter validation and limits")
+      Container(fixedTermHooks, "Fixed Term Hooks", "Solidity Contract", "Term loan management and restrictions")
+    }
+
+    Container_Boundary(sanctionsSystem, "Sanctions System") {
+      Container(sanctionsSentinel, "Sanctions Sentinel", "Solidity Contract", "Real-time sanctions monitoring and overrides")
+      Container(sanctionsEscrow, "Sanctions Escrow", "Solidity Contract", "Asset custody for sanctioned addresses")
+    }
+
+    Container_Boundary(securityLayer, "Security Layer") {
+      Container(sphereXProtection, "SphereX Protection", "Solidity Contract", "Transaction validation and MEV protection")
+      Container(reentrancyGuard, "Reentrancy Guard", "Solidity Contract", "Cross-function reentrancy protection")
+    }
+
+    Container_Boundary(dataLayer, "Data Access Layer") {
+      Container(marketLens, "Market Lens", "Solidity Contract", "Read-only aggregated market and user data")
+      ContainerDb(marketState, "Market State", "Contract Storage", "Market balances, rates, and configuration")
+      ContainerDb(lenderAccounts, "Lender Accounts", "Contract Storage", "User balances and authorization status")
+      ContainerDb(withdrawalBatches, "Withdrawal Batches", "Contract Storage", "Queued withdrawal requests and processing")
+    }
+
+    Container_Boundary(libraryLayer, "Library Layer") {
+      Container(marketStateLib, "Market State Library", "Solidity Library", "State calculations and interest accrual")
+      Container(feeMathLib, "Fee Math Library", "Solidity Library", "Fixed-point arithmetic and fee calculations")
+      Container(withdrawalLib, "Withdrawal Library", "Solidity Library", "Withdrawal batch processing logic")
+      Container(libERC20, "LibERC20", "Solidity Library", "Safe ERC20 operations and rescue functions")
+    }
+  }
+
+  %% Core Administrative Flows
+  Rel(protocolOwner, archController, "Manages", "registerBorrower, setProtocolFees, blacklistAssets")
+  Rel(protocolOwner, hooksFactory, "Configures", "addHooksTemplate, setOriginationFees")
+
+  %% Market Deployment Flows
+  Rel(borrower, hooksFactory, "Deploys", "deployHooksInstance, deployMarket")
+  Rel(hooksFactory, archController, "Registers", "registerMarket, validateBorrower")
+  Rel(hooksFactory, accessControlHooks, "Deploys", "CREATE2 deployment")
+  Rel(hooksFactory, constraintHooks, "Deploys", "CREATE2 deployment")
+  Rel(hooksFactory, fixedTermHooks, "Deploys", "CREATE2 deployment")
+  Rel(hooksFactory, wildcatMarket, "Deploys", "CREATE2 deployment with hooks")
+
+  %% Market Operations
+  Rel(borrower, wildcatMarket, "Manages", "borrow, repay, rescueTokens, forceBuyBack, closeMarket")
+  Rel(borrower, marketConfig, "Controls", "setInterestRate, setReserveRatio, nukeFromOrbit")
+  Rel(lender, wildcatMarket, "Interacts", "deposit, transfer")
+  Rel(lender, marketWithdrawals, "Withdraws", "queueWithdrawal, executeWithdrawal")
+
+  %% Authorization Flows
+  Rel(roleProvider, accessControlHooks, "Authorizes", "grantRole, validateCredential")
+  Rel(lender, accessControlHooks, "Requests", "pullProviderCredential")
+  Rel(borrower, accessControlHooks, "Manages", "addRoleProvider, blockFromDeposits")
+
+  %% Hook Integration
+  Rel(wildcatMarket, accessControlHooks, "Validates", "onDeposit, onTransfer, onBorrow, onRepay")
+  Rel(marketConfig, constraintHooks, "Validates", "onSetInterestRate, onSetReserveRatio")
+  Rel(fixedTermHooks, constraintHooks, "Protects", "term restrictions")
+
+  %% Data Storage and State
+  Rel(wildcatMarket, marketState, "Stores", "market parameters, rates, totals")
+  Rel(marketToken, lenderAccounts, "Stores", "scaled balances, allowances")
+  Rel(marketWithdrawals, withdrawalBatches, "Stores", "queued withdrawals, batch data")
+
+  %% Library Usage
+  Rel(marketBase, marketStateLib, "Uses", "state calculations, interest accrual")
+  Rel(marketBase, feeMathLib, "Uses", "fixed-point math, fee calculations")
+  Rel(marketWithdrawals, withdrawalLib, "Uses", "batch processing, withdrawal logic")
+  Rel(wildcatMarket, libERC20, "Uses", "safe transfers, token rescue")
+
+  %% Data Access
+  Rel(marketLens, wildcatMarket, "Reads", "comprehensive market data")
+  Rel(marketLens, accessControlHooks, "Reads", "lender authorization status")
+  Rel(marketLens, archController, "Reads", "protocol configuration")
+
+  %% External Integrations
+  Rel(sanctionsSentinel, chainalysis, "Queries", "isSanctioned, real-time screening")
+  Rel(sphereXProtection, sphereX, "Validates", "transaction protection, MEV detection")
+  Rel(wildcatMarket, erc20Assets, "Manages", "asset transfers, liquidity")
+
+  %% Sanctions Handling
+  Rel(wildcatMarket, sanctionsSentinel, "Checks", "sanctions before transfers")
+  Rel(sanctionsSentinel, sanctionsEscrow, "Creates", "escrow for sanctioned funds")
+  Rel(borrower, sanctionsSentinel, "Overrides", "temporary sanction bypass")
+
+  %% Security Protection
+  Rel(wildcatMarket, sphereXProtection, "Protected by", "pre/post transaction validation")
+  Rel(hooksFactory, sphereXProtection, "Protected by", "deployment protection")
+  Rel(wildcatMarket, reentrancyGuard, "Protected by", "cross-function reentrancy")
+
+  %% Market Composition
+  Rel(wildcatMarket, marketBase, "Inherits", "core logic and state management")
+  Rel(wildcatMarket, marketConfig, "Inherits", "parameter management")
+  Rel(wildcatMarket, marketToken, "Inherits", "ERC20 functionality")
+  Rel(wildcatMarket, marketWithdrawals, "Inherits", "withdrawal processing")

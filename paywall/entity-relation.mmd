@@ -1,0 +1,149 @@
+
+```mermaid
+erDiagram
+    WildcatArchController ||--o{ HooksFactory : "registers"
+    WildcatArchController ||--o{ WildcatMarket : "tracks"
+    WildcatArchController ||--o{ Borrower : "authorizes"
+    WildcatArchController ||--|| WildcatSanctionsSentinel : "references"
+    
+    HooksFactory ||--o{ HooksInstance : "deploys"
+    HooksFactory ||--o{ WildcatMarket : "creates"
+    
+    HooksInstance ||--|| AccessControlHooks : "implements"
+    HooksInstance ||--|| MarketConstraintHooks : "implements"
+    HooksInstance ||--o{ IRoleProvider : "uses"
+    
+    WildcatMarket ||--|| WildcatMarketBase : "inherits"
+    WildcatMarket ||--|| WildcatMarketConfig : "inherits"
+    WildcatMarket ||--|| WildcatMarketToken : "inherits"
+    WildcatMarket ||--|| WildcatMarketWithdrawals : "inherits"
+    WildcatMarket ||--|| HooksInstance : "uses"
+    WildcatMarket ||--o{ MarketToken : "mints"
+    WildcatMarket ||--o{ WithdrawalBatch : "creates"
+    WildcatMarket ||--o{ Lender : "serves"
+    WildcatMarket ||--|| Borrower : "owned by"
+    
+    Borrower ||--o{ WildcatMarket : "deploys"
+    Borrower ||--o{ HooksInstance : "configures"
+    
+    Lender ||--o{ MarketToken : "holds"
+    Lender ||--o{ WithdrawalBatch : "participates"
+    Lender ||--o{ Credential : "obtains"
+    
+    IRoleProvider ||--o{ Credential : "issues"
+    IRoleProvider ||--o{ Lender : "validates"
+    
+    WildcatSanctionsSentinel ||--o{ WildcatSanctionsEscrow : "creates"
+    WildcatSanctionsSentinel ||--|| ChainalysisOracle : "queries"
+    
+    WithdrawalBatch ||--o{ Lender : "contains"
+    
+    WildcatArchController {
+        address owner
+        mapping registeredBorrowers
+        mapping deployedFactories
+        mapping deployedMarkets
+        mapping deployedHooks
+    }
+    
+    HooksFactory {
+        address archController
+        mapping deployedMarkets
+        mapping hooksTemplates
+        uint256 marketCount
+    }
+    
+    WildcatMarket {
+        address borrower
+        address asset
+        address hooks
+        uint256 totalSupply
+        uint256 maxTotalSupply
+        uint256 annualInterestBips
+        uint256 reserveRatioBips
+        uint256 delinquencyFeeBips
+        uint256 withdrawalBatchDuration
+        uint256 delinquencyGracePeriod
+        uint256 liquidityRequired
+        uint256 scaleFactor
+        MarketState state
+    }
+    
+    HooksInstance {
+        address deployer
+        mapping marketConstraints
+        mapping accessControlConfig
+        mapping roleProviders
+        bool transferRestrictionsEnabled
+    }
+    
+    AccessControlHooks {
+        mapping knownLenders
+        mapping credentialsByLender
+        uint256 depositRequirements
+    }
+    
+    MarketConstraintHooks {
+        uint256 minimumAnnualInterestBips
+        uint256 maximumAnnualInterestBips
+        uint256 minimumReserveRatioBips
+        uint256 maximumReserveRatioBips
+        uint256 minimumDelinquencyGracePeriod
+        uint256 maximumDelinquencyGracePeriod
+    }
+    
+    IRoleProvider {
+        string providerName
+        mapping credentials
+        function validateCredential()
+        function grantRole()
+        function revokeRole()
+    }
+    
+    Borrower {
+        address borrowerAddress
+        string entityName
+        bool isRegistered
+    }
+    
+    Lender {
+        address lenderAddress
+        bool isKnownLender
+        uint256 scaledBalance
+    }
+    
+    MarketToken {
+        uint256 scaledAmount
+        address holder
+    }
+    
+    Credential {
+        address provider
+        address account
+        uint256 timestamp
+        uint256 expiry
+        bytes32 role
+    }
+    
+    WithdrawalBatch {
+        uint256 batchId
+        uint256 totalAmount
+        uint256 scaledAmount
+        uint256 expiry
+        mapping accountWithdrawals
+    }
+    
+    WildcatSanctionsSentinel {
+        address chainalysisOracle
+        mapping sanctionedAddresses
+        mapping escrowContracts
+    }
+    
+    WildcatSanctionsEscrow {
+        address sentinel
+        address borrower
+        address account
+        address asset
+        uint256 amount
+    }
+```

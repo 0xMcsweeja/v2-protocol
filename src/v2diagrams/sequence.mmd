@@ -1,0 +1,160 @@
+sequenceDiagram
+    participant ProtocolOwner
+    participant WildcatArchController
+    participant Borrower
+    participant HooksFactory
+    participant HooksTemplate
+    participant AccessControlHooks
+    participant FixedTermLoanHooks
+    participant MarketConstraintHooks
+    participant IRoleProvider
+    participant WildcatMarket
+    participant MarketLens
+    participant Lender
+    participant FeeRecipient
+    participant WildcatSanctionsSentinel
+    participant WildcatSanctionsEscrow
+
+    Note over ProtocolOwner,HooksFactory: Protocol Setup
+    ProtocolOwner->>WildcatArchController: registerControllerFactory(hooksFactory)
+    ProtocolOwner->>WildcatArchController: registerBorrower(borrowerAddress)
+    ProtocolOwner->>HooksFactory: addHooksTemplate(template, feeConfig)
+
+    Note over Borrower,HooksFactory: Hooks Instance Deployment
+    Borrower->>HooksFactory: deployHooksInstance(template, config)
+    HooksFactory->>WildcatArchController: Check borrower registration
+    WildcatArchController-->>HooksFactory: Borrower verified
+    HooksFactory->>HooksTemplate: Deploy hooks instance from template
+    HooksTemplate-->>HooksFactory: New hooks instance address
+    HooksFactory->>AccessControlHooks: Initialize hooks with config
+    HooksFactory-->>Borrower: Hooks instance deployed
+
+    Note over Borrower,WildcatMarket: Market Deployment
+    Borrower->>HooksFactory: deployMarket(marketParams, hooksAddress)
+    HooksFactory->>HooksFactory: Store market params temporarily
+    HooksFactory->>AccessControlHooks: onCreateMarket(marketParams)
+    AccessControlHooks-->>HooksFactory: Market creation allowed
+    HooksFactory->>WildcatMarket: Deploy market contract
+    WildcatMarket->>HooksFactory: Read market params from storage
+    WildcatMarket->>WildcatArchController: registerMarket(marketAddress)
+    HooksFactory-->>Borrower: Market deployed
+
+    Note over Borrower,IRoleProvider: Access Control Setup
+    Borrower->>AccessControlHooks: addRoleProvider(providerAddress, config)
+    AccessControlHooks->>AccessControlHooks: Store provider configuration
+    IRoleProvider->>AccessControlHooks: Register as pull provider (if applicable)
+
+    Note over Lender,WildcatMarket: Lender Deposit Flow
+    alt Pull Provider Flow
+        Lender->>AccessControlHooks: pullProviderCredential(providerAddress)
+        AccessControlHooks->>IRoleProvider: getCredential(lender)
+        IRoleProvider-->>AccessControlHooks: Return credential
+        AccessControlHooks->>AccessControlHooks: Store lender status
+    else Push Provider Flow
+        Lender->>IRoleProvider: Request credential off-chain
+        IRoleProvider->>AccessControlHooks: Push credential on-chain
+    end
+    
+    Lender->>WildcatMarket: deposit(amount)
+    WildcatMarket->>AccessControlHooks: onDeposit(lender, amount)
+    AccessControlHooks->>AccessControlHooks: validateCredential(lender)
+    AccessControlHooks->>WildcatSanctionsSentinel: isSanctioned(lender)
+    WildcatSanctionsSentinel-->>AccessControlHooks: Not sanctioned
+    AccessControlHooks-->>WildcatMarket: Deposit allowed
+    WildcatMarket->>WildcatMarket: Update market state and mint tokens
+    WildcatMarket-->>Lender: Market tokens minted
+
+    Note over Lender,WildcatMarket: Withdrawal Request
+    Lender->>WildcatMarket: queueWithdrawal(amount)
+    WildcatMarket->>AccessControlHooks: onQueueWithdrawal(lender, amount)
+    AccessControlHooks->>AccessControlHooks: Check lender approval status
+    AccessControlHooks->>FixedTermLoanHooks: onQueueWithdrawal(lender, amount)
+    FixedTermLoanHooks->>FixedTermLoanHooks: Check fixed term constraints
+    FixedTermLoanHooks-->>AccessControlHooks: Withdrawal allowed
+    AccessControlHooks-->>WildcatMarket: Withdrawal allowed
+    WildcatMarket->>WildcatMarket: Create/update withdrawal batch
+    WildcatMarket-->>Lender: Withdrawal queued
+
+    Note over Lender,WildcatMarket: Withdrawal Execution
+    Lender->>WildcatMarket: executeWithdrawal(expiry, amount)
+    WildcatMarket->>WildcatMarket: Process withdrawal batch
+    WildcatMarket->>WildcatMarket: Transfer assets to lender
+    WildcatMarket-->>Lender: Assets transferred
+
+    Note over Borrower,WildcatMarket: Market Configuration
+    Borrower->>WildcatMarket: setAnnualInterestBips(newRate)
+    WildcatMarket->>MarketConstraintHooks: onSetAnnualInterestBips(newRate)
+    MarketConstraintHooks->>MarketConstraintHooks: Check rate constraints
+    MarketConstraintHooks->>FixedTermLoanHooks: onSetAnnualInterestBips(newRate)
+    FixedTermLoanHooks->>FixedTermLoanHooks: Check fixed term constraints
+    FixedTermLoanHooks-->>MarketConstraintHooks: Rate change allowed
+    MarketConstraintHooks-->>WildcatMarket: Rate change allowed
+    WildcatMarket->>WildcatMarket: Update interest rate
+    WildcatMarket-->>Borrower: Rate updated
+
+    Note over Borrower,WildcatMarket: Fixed Term Management
+    Borrower->>FixedTermLoanHooks: setFixedTermEndTime(newEndTime)
+    FixedTermLoanHooks->>FixedTermLoanHooks: Validate term constraints
+    FixedTermLoanHooks-->>Borrower: Term updated
+
+    Note over FeeRecipient,WildcatMarket: Fee Collection
+    alt Fee Recipient Collection
+        FeeRecipient->>WildcatMarket: collectFees()
+    else Borrower Collection
+        Borrower->>WildcatMarket: collectFees()
+    end
+    WildcatMarket->>WildcatMarket: Transfer accrued protocol fees
+    WildcatMarket-->>FeeRecipient: Fees transferred
+
+    Note over MarketLens,WildcatMarket: Data Access
+    MarketLens->>WildcatArchController: getRegisteredMarkets()
+    MarketLens->>HooksFactory: getMarketsForBorrower(borrower)
+    MarketLens->>WildcatMarket: getMarketData(market)
+    MarketLens->>AccessControlHooks: getLenderStatus(lender)
+    WildcatMarket-->>MarketLens: Market data returned
+    AccessControlHooks-->>MarketLens: Lender status returned
+
+    Note over WildcatMarket,WildcatSanctionsEscrow: Sanctions Handling
+    WildcatMarket->>WildcatSanctionsSentinel: isSanctioned(address)
+    WildcatSanctionsSentinel-->>WildcatMarket: Address sanctioned
+    WildcatMarket->>WildcatSanctionsSentinel: createEscrow(borrower, account, asset)
+    WildcatSanctionsSentinel->>WildcatSanctionsEscrow: Deploy escrow contract
+    WildcatSanctionsEscrow->>WildcatSanctionsEscrow: Hold sanctioned funds
+    
+    Note over Borrower,WildcatSanctionsSentinel: Sanctions Override
+    Borrower->>WildcatSanctionsSentinel: overrideSanction(account)
+    WildcatSanctionsSentinel->>WildcatSanctionsSentinel: Set override flag
+    Borrower->>WildcatSanctionsEscrow: releaseEscrow()
+    WildcatSanctionsEscrow->>WildcatSanctionsEscrow: Release funds to account
+
+    Note over Borrower,WildcatMarket: Borrowing Operations
+    Borrower->>WildcatMarket: borrow(amount)
+    WildcatMarket->>WildcatMarket: Check borrowable assets
+    WildcatMarket->>WildcatMarket: Transfer assets to borrower
+    WildcatMarket-->>Borrower: Assets transferred
+    
+    Borrower->>WildcatMarket: repay(amount)
+    WildcatMarket->>WildcatMarket: Update debt and delinquency status
+    WildcatMarket-->>Borrower: Repayment processed
+
+    Note over Borrower,WildcatMarket: Emergency Operations
+    Borrower->>WildcatMarket: rescueTokens(tokenAddress)
+    WildcatMarket->>WildcatMarket: Validate token is not protected asset
+    WildcatMarket->>WildcatMarket: Transfer all tokens to borrower
+    WildcatMarket-->>Borrower: Tokens rescued
+
+    Borrower->>WildcatMarket: forceBuyBack(lender, amount)
+    WildcatMarket->>WildcatMarket: Force withdrawal for sanctioned lender
+    WildcatMarket-->>Borrower: Forced withdrawal executed
+
+    Borrower->>WildcatMarket: nukeFromOrbit(account)
+    WildcatMarket->>WildcatSanctionsSentinel: Verify account is sanctioned
+    WildcatMarket->>WildcatMarket: Block account and force exit
+    WildcatMarket-->>Borrower: Account nuked
+
+    Note over Borrower,AccessControlHooks: Access Control Management
+    Borrower->>AccessControlHooks: blockFromDeposits(account)
+    AccessControlHooks->>AccessControlHooks: Update account approval status
+    
+    Borrower->>AccessControlHooks: unblockFromDeposits(account)
+    AccessControlHooks->>AccessControlHooks: Restore account access

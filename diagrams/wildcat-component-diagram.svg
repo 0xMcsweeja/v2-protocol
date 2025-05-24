@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1200">
+  <defs>
+    <style>
+      .title { font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; }
+      .section-title { font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; }
+      .component { fill: #E8F4FD; stroke: #2196F3; stroke-width: 2; }
+      .factory { fill: #FFF3E0; stroke: #FF9800; stroke-width: 2; }
+      .access { fill: #F3E5F5; stroke: #9C27B0; stroke-width: 2; }
+      .security { fill: #FCE4EC; stroke: #E91E63; stroke-width: 2; }
+      .market { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
+      .lens { fill: #F5F5F5; stroke: #757575; stroke-width: 2; }
+      .text { font-family: Arial, sans-serif; font-size: 14px; text-anchor: middle; }
+      .small-text { font-family: Arial, sans-serif; font-size: 12px; text-anchor: middle; }
+      .arrow { fill: none; stroke: #333; stroke-width: 2; marker-end: url(#arrowhead); }
+      .deploy-arrow { fill: none; stroke: #FF9800; stroke-width: 2; stroke-dasharray: 5,5; marker-end: url(#deploy-arrowhead); }
+      .hook-arrow { fill: none; stroke: #9C27B0; stroke-width: 2; stroke-dasharray: 3,3; marker-end: url(#hook-arrowhead); }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#333"/>
+    </marker>
+    <marker id="deploy-arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#FF9800"/>
+    </marker>
+    <marker id="hook-arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#9C27B0"/>
+    </marker>
+  </defs>
+  
+  <!-- Title -->
+  <text x="800" y="40" class="title">Wildcat Protocol V2 - Component Architecture</text>
+  
+  <!-- Core Infrastructure -->
+  <g id="core-infrastructure">
+    <text x="200" y="100" class="section-title">Core Infrastructure</text>
+    
+    <!-- ArchController -->
+    <rect x="50" y="120" width="300" height="80" class="component" rx="5"/>
+    <text x="200" y="155" class="text">WildcatArchController</text>
+    <text x="200" y="175" class="small-text">Registry & Permission Gate</text>
+    <text x="200" y="190" class="small-text">• Borrower registration</text>
+    
+    <!-- ReentrancyGuard -->
+    <rect x="50" y="220" width="300" height="60" class="component" rx="5"/>
+    <text x="200" y="250" class="text">ReentrancyGuard</text>
+    <text x="200" y="265" class="small-text">Transient storage protection</text>
+  </g>
+  
+  <!-- Factory System -->
+  <g id="factory-system">
+    <text x="500" y="100" class="section-title">Factory System</text>
+    
+    <!-- HooksFactory -->
+    <rect x="400" y="120" width="200" height="100" class="factory" rx="5"/>
+    <text x="500" y="155" class="text">HooksFactory</text>
+    <text x="500" y="175" class="small-text">• Deploy markets</text>
+    <text x="500" y="190" class="small-text">• Deploy hooks</text>
+    <text x="500" y="205" class="small-text">• Manage templates</text>
+  </g>
+  
+  <!-- Security & Compliance -->
+  <g id="security-compliance">
+    <text x="750" y="100" class="section-title">Security & Compliance</text>
+    
+    <!-- SanctionsSentinel -->
+    <rect x="650" y="120" width="200" height="80" class="security" rx="5"/>
+    <text x="750" y="155" class="text">SanctionsSentinel</text>
+    <text x="750" y="175" class="small-text">Chainalysis oracle</text>
+    <text x="750" y="190" class="small-text">Sanctions checking</text>
+    
+    <!-- SanctionsEscrow -->
+    <rect x="650" y="220" width="200" height="60" class="security" rx="5"/>
+    <text x="750" y="250" class="text">SanctionsEscrow</text>
+    <text x="750" y="265" class="small-text">Sanctioned funds</text>
+  </g>
+  
+  <!-- Market Contracts -->
+  <g id="market-contracts">
+    <text x="200" y="350" class="section-title">Market Contracts</text>
+    
+    <!-- WildcatMarket -->
+    <rect x="50" y="380" width="300" height="80" class="market" rx="5"/>
+    <text x="200" y="415" class="text">WildcatMarket</text>
+    <text x="200" y="435" class="small-text">Main orchestrator contract</text>
+    <text x="200" y="450" class="small-text">Inherits all market functionality</text>
+    
+    <!-- Market Components -->
+    <rect x="50" y="480" width="140" height="60" class="market" rx="5"/>
+    <text x="120" y="510" class="text">MarketBase</text>
+    <text x="120" y="525" class="small-text">Core operations</text>
+    
+    <rect x="210" y="480" width="140" height="60" class="market" rx="5"/>
+    <text x="280" y="510" class="text">MarketConfig</text>
+    <text x="280" y="525" class="small-text">APR, reserves</text>
+    
+    <rect x="50" y="560" width="140" height="60" class="market" rx="5"/>
+    <text x="120" y="590" class="text">MarketToken</text>
+    <text x="120" y="605" class="small-text">ERC20 shares</text>
+    
+    <rect x="210" y="560" width="140" height="60" class="market" rx="5"/>
+    <text x="280" y="590" class="text">MarketWithdrawals</text>
+    <text x="280" y="605" class="small-text">Batch processing</text>
+  </g>
+  
+  <!-- Hooks System -->
+  <g id="hooks-system">
+    <text x="500" y="350" class="section-title">Hooks System</text>
+    
+    <!-- Base Hooks -->
+    <rect x="400" y="380" width="200" height="60" class="access" rx="5"/>
+    <text x="500" y="410" class="text">MarketConstraintHooks</text>
+    <text x="500" y="425" class="small-text">Base hooks template</text>
+    
+    <!-- AccessControlHooks -->
+    <rect x="400" y="460" width="200" height="80" class="access" rx="5"/>
+    <text x="500" y="495" class="text">AccessControlHooks</text>
+    <text x="500" y="510" class="small-text">Role-based access</text>
+    <text x="500" y="525" class="small-text">Credential providers</text>
+    
+    <!-- FixedTermLoanHooks -->
+    <rect x="400" y="560" width="200" height="60" class="access" rx="5"/>
+    <text x="500" y="590" class="text">FixedTermLoanHooks</text>
+    <text x="500" y="605" class="small-text">Fixed-term markets</text>
+  </g>
+  
+  <!-- External Integrations -->
+  <g id="external-integrations">
+    <text x="750" y="350" class="section-title">External Integrations</text>
+    
+    <!-- Role Providers -->
+    <rect x="650" y="380" width="200" height="80" class="access" rx="5"/>
+    <text x="750" y="415" class="text">Role Providers</text>
+    <text x="750" y="435" class="small-text">External credential</text>
+    <text x="750" y="450" class="small-text">systems (KYC, etc)</text>
+    
+    <!-- Chainalysis -->
+    <rect x="650" y="480" width="200" height="60" class="security" rx="5"/>
+    <text x="750" y="510" class="text">Chainalysis Oracle</text>
+    <text x="750" y="525" class="small-text">Sanctions list</text>
+  </g>
+  
+  <!-- Lens Contracts -->
+  <g id="lens-contracts">
+    <text x="1050" y="100" class="section-title">Read-Only Data</text>
+    
+    <!-- MarketLens -->
+    <rect x="950" y="120" width="200" height="100" class="lens" rx="5"/>
+    <text x="1050" y="155" class="text">MarketLens</text>
+    <text x="1050" y="175" class="small-text">• Market data</text>
+    <text x="1050" y="190" class="small-text">• Lender accounts</text>
+    <text x="1050" y="205" class="small-text">• Hooks config</text>
+  </g>
+  
+  <!-- Libraries -->
+  <g id="libraries">
+    <text x="1050" y="350" class="section-title">Core Libraries</text>
+    
+    <rect x="950" y="380" width="200" height="240" class="component" rx="5"/>
+    <text x="1050" y="410" class="text">Libraries</text>
+    <text x="1050" y="435" class="small-text">• MarketState</text>
+    <text x="1050" y="455" class="small-text">• FeeMath</text>
+    <text x="1050" y="475" class="small-text">• Withdrawal</text>
+    <text x="1050" y="495" class="small-text">• FIFOQueue</text>
+    <text x="1050" y="515" class="small-text">• SafeCastLib</text>
+    <text x="1050" y="535" class="small-text">• MathUtils</text>
+    <text x="1050" y="555" class="small-text">• LibStoredInitCode</text>
+    <text x="1050" y="575" class="small-text">• StringQuery</text>
+    <text x="1050" y="595" class="small-text">• LibERC20</text>
+    <text x="1050" y="610" class="small-text">• Errors & Events</text>
+  </g>
+  
+  <!-- Connections -->
+  <!-- ArchController to Factory -->
+  <path d="M 350 160 L 400 160" class="arrow"/>
+  
+  <!-- Factory deploys Markets -->
+  <path d="M 500 220 L 200 380" class="deploy-arrow"/>
+  
+  <!-- Factory deploys Hooks -->
+  <path d="M 500 220 L 500 380" class="deploy-arrow"/>
+  
+  <!-- Markets use Hooks -->
+  <path d="M 350 420 L 400 420" class="hook-arrow"/>
+  <path d="M 350 500 L 400 500" class="hook-arrow"/>
+  <path d="M 350 580 L 400 580" class="hook-arrow"/>
+  
+  <!-- Hooks to Role Providers -->
+  <path d="M 600 500 L 650 420" class="arrow"/>
+  
+  <!-- Markets to Sentinel -->
+  <path d="M 350 420 L 650 160" class="arrow"/>
+  
+  <!-- Sentinel to Escrow -->
+  <path d="M 750 200 L 750 220" class="arrow"/>
+  
+  <!-- Sentinel to Chainalysis -->
+  <path d="M 750 200 L 750 480" class="arrow"/>
+  
+  <!-- Market inheritance arrows -->
+  <path d="M 120 460 L 120 480" class="arrow"/>
+  <path d="M 280 460 L 280 480" class="arrow"/>
+  <path d="M 120 540 L 120 560" class="arrow"/>
+  <path d="M 280 540 L 280 560" class="arrow"/>
+  
+  <!-- Legend -->
+  <g id="legend" transform="translate(1200, 380)">
+    <text x="0" y="0" class="section-title">Legend</text>
+    
+    <rect x="0" y="20" width="30" height="20" class="component"/>
+    <text x="40" y="35" class="small-text" text-anchor="start">Core Component</text>
+    
+    <rect x="0" y="50" width="30" height="20" class="factory"/>
+    <text x="40" y="65" class="small-text" text-anchor="start">Factory</text>
+    
+    <rect x="0" y="80" width="30" height="20" class="market"/>
+    <text x="40" y="95" class="small-text" text-anchor="start">Market</text>
+    
+    <rect x="0" y="110" width="30" height="20" class="access"/>
+    <text x="40" y="125" class="small-text" text-anchor="start">Access/Hooks</text>
+    
+    <rect x="0" y="140" width="30" height="20" class="security"/>
+    <text x="40" y="155" class="small-text" text-anchor="start">Security</text>
+    
+    <rect x="0" y="170" width="30" height="20" class="lens"/>
+    <text x="40" y="185" class="small-text" text-anchor="start">Read-Only</text>
+    
+    <line x1="0" y1="210" x2="30" y2="210" class="arrow"/>
+    <text x="40" y="215" class="small-text" text-anchor="start">Uses/Calls</text>
+    
+    <line x1="0" y1="230" x2="30" y2="230" class="deploy-arrow"/>
+    <text x="40" y="235" class="small-text" text-anchor="start">Deploys</text>
+    
+    <line x1="0" y1="250" x2="30" y2="250" class="hook-arrow"/>
+    <text x="40" y="255" class="small-text" text-anchor="start">Hook Call</text>
+  </g>
+  
+  <!-- Key Features Box -->
+  <g id="key-features" transform="translate(50, 700)">
+    <rect x="0" y="0" width="1100" height="150" fill="#F0F0F0" stroke="#999" stroke-width="2" rx="5"/>
+    <text x="550" y="25" class="section-title" text-anchor="middle">Key V2 Features</text>
+    
+    <text x="50" y="50" class="small-text" text-anchor="start">• Direct borrower control (no controllers)</text>
+    <text x="50" y="70" class="small-text" text-anchor="start">• Flexible hooks system for extensibility</text>
+    <text x="50" y="90" class="small-text" text-anchor="start">• Create2 deployment with custom salts</text>
+    <text x="50" y="110" class="small-text" text-anchor="start">• Transient storage for reentrancy</text>
+    <text x="50" y="130" class="small-text" text-anchor="start">• Gas optimized with custom encoding</text>
+    
+    <text x="400" y="50" class="small-text" text-anchor="start">• Withdrawal batches for sanctions handling</text>
+    <text x="400" y="70" class="small-text" text-anchor="start">• Modular market components</text>
+    <text x="400" y="90" class="small-text" text-anchor="start">• Role-based access via credentials</text>
+    <text x="400" y="110" class="small-text" text-anchor="start">• Fixed-term loan support</text>
+    <text x="400" y="130" class="small-text" text-anchor="start">• Rebasing token scale factors</text>
+    
+    <text x="750" y="50" class="small-text" text-anchor="start">• No offchain dependencies for core ops</text>
+    <text x="750" y="70" class="small-text" text-anchor="start">• Template-based hooks deployment</text>
+    <text x="750" y="90" class="small-text" text-anchor="start">• Protocol fee per template</text>
+    <text x="750" y="110" class="small-text" text-anchor="start">• Enhanced delinquency handling</text>
+    <text x="750" y="130" class="small-text" text-anchor="start">• Comprehensive lens contracts</text>
+  </g>
+</svg>

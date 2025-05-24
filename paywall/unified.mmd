@@ -1,0 +1,128 @@
+graph TB
+    %% Styling
+    classDef coreContract fill:#4169E1,stroke:#000,stroke-width:3px,color:#fff
+    classDef marketContract fill:#228B22,stroke:#000,stroke-width:2px,color:#fff
+    classDef hooksContract fill:#FF8C00,stroke:#000,stroke-width:2px,color:#fff
+    classDef sanctionsContract fill:#DC143C,stroke:#000,stroke-width:2px,color:#fff
+    classDef interface fill:#FFD700,stroke:#000,stroke-width:1px,color:#000
+    classDef externalActor fill:#C0C0C0,stroke:#000,stroke-width:2px,color:#000
+    classDef dataStore fill:#87CEEB,stroke:#000,stroke-width:2px,color:#000
+    
+    %% External Actors
+    ProtocolOwner((Protocol Owner)):::externalActor
+    Borrower((Borrower)):::externalActor
+    Lender((Lender)):::externalActor
+    RoleProvider((Role Provider)):::externalActor
+    ChainalysisOracle((Chainalysis Oracle)):::externalActor
+    
+    %% Core Contracts
+    WildcatArchController[WildcatArchController<br/>- Registry & Permissions<br/>- borrowerAuthorization<br/>- deployedMarkets<br/>- deployedFactories]:::coreContract
+    HooksFactory[HooksFactory<br/>- Market Deployer<br/>- Hooks Cloner<br/>- deployedMarkets<br/>- hooksTemplates]:::coreContract
+    
+    %% Market Contracts
+    WildcatMarket[WildcatMarket<br/>- Main Market Logic<br/>- totalSupply<br/>- scaleFactor<br/>- annualInterestBips]:::marketContract
+    WildcatMarketBase[WildcatMarketBase<br/>- Core Market Logic<br/>- updateState<br/>- accrueInterest]:::marketContract
+    WildcatMarketConfig[WildcatMarketConfig<br/>- Parameter Management<br/>- setAnnualInterestBips<br/>- setReserveRatio]:::marketContract
+    WildcatMarketToken[WildcatMarketToken<br/>- ERC20 Implementation<br/>- mint/burn<br/>- scaledBalances]:::marketContract
+    WildcatMarketWithdrawals[WildcatMarketWithdrawals<br/>- Withdrawal Logic<br/>- withdrawalBatches<br/>- queueWithdrawal]:::marketContract
+    
+    %% Hooks Contracts
+    HooksInstance[HooksInstance<br/>- Deployed Hook Set<br/>- marketConstraints<br/>- accessControl]:::hooksContract
+    AccessControlHooks[AccessControlHooks<br/>- Access Management<br/>- knownLenders<br/>- credentials]:::hooksContract
+    MarketConstraintHooks[MarketConstraintHooks<br/>- Parameter Limits<br/>- minMaxAPR<br/>- minMaxReserveRatio]:::hooksContract
+    FixedTermLoanHooks[FixedTermLoanHooks<br/>- Term Restrictions<br/>- fixedTerms<br/>- maturityDates]:::hooksContract
+    
+    %% Sanctions System
+    WildcatSanctionsSentinel[WildcatSanctionsSentinel<br/>- Sanctions Monitor<br/>- sanctionsList<br/>- escrowMapping]:::sanctionsContract
+    WildcatSanctionsEscrow[WildcatSanctionsEscrow<br/>- Frozen Funds<br/>- escrowedAmount<br/>- releaseConditions]:::sanctionsContract
+    
+    %% Interfaces
+    IHooks[IHooks]:::interface
+    IWildcatArchController[IWildcatArchController]:::interface
+    IRoleProvider[IRoleProvider]:::interface
+    IMarketEventsAndErrors[IMarketEventsAndErrors]:::interface
+    
+    %% Ownership and Permission Flows
+    ProtocolOwner ==>|owns| WildcatArchController
+    ProtocolOwner -->|registerBorrower| WildcatArchController
+    ProtocolOwner -->|registerFactory| WildcatArchController
+    
+    %% Borrower Actions
+    Borrower ==>|deployMarketAndHooks| HooksFactory
+    Borrower -->|configureHooks| HooksInstance
+    Borrower -->|setAnnualInterestBips| WildcatMarketConfig
+    Borrower -->|closeMarket| WildcatMarket
+    Borrower -->|forceWithdraw| WildcatMarketWithdrawals
+    
+    %% Factory Operations
+    HooksFactory -->|checkBorrowerAuthorization| WildcatArchController
+    HooksFactory ==>|deployHooks| HooksInstance
+    HooksFactory ==>|deployMarket| WildcatMarket
+    HooksFactory -->|registerMarket| WildcatArchController
+    
+    %% Market Inheritance
+    WildcatMarket -.->|inherits| WildcatMarketBase
+    WildcatMarket -.->|inherits| WildcatMarketConfig
+    WildcatMarket -.->|inherits| WildcatMarketToken
+    WildcatMarket -.->|inherits| WildcatMarketWithdrawals
+    WildcatMarket -.->|implements| IMarketEventsAndErrors
+    
+    %% Hooks Implementation
+    HooksInstance -.->|implements| IHooks
+    HooksInstance -.->|contains| AccessControlHooks
+    HooksInstance -.->|contains| MarketConstraintHooks
+    HooksInstance -.->|contains| FixedTermLoanHooks
+    
+    %% Lender Flows
+    Lender -->|requestCredential| RoleProvider
+    RoleProvider ==>|issueCredential| AccessControlHooks
+    Lender ==>|deposit| WildcatMarket
+    Lender ==>|queueWithdrawal| WildcatMarketWithdrawals
+    Lender -->|executeWithdrawal| WildcatMarketWithdrawals
+    
+    %% Market-Hooks Interaction
+    WildcatMarket ==>|onDeposit| HooksInstance
+    WildcatMarket ==>|onQueueWithdrawal| HooksInstance
+    WildcatMarket ==>|onSetAnnualInterestBips| HooksInstance
+    WildcatMarket ==>|onCloseMarket| HooksInstance
+    
+    %% Hooks Validation
+    HooksInstance -->|validateCredential| AccessControlHooks
+    HooksInstance -->|checkConstraints| MarketConstraintHooks
+    HooksInstance -->|checkFixedTerm| FixedTermLoanHooks
+    AccessControlHooks -->|queryProvider| IRoleProvider
+    
+    %% Sanctions Flow
+    WildcatMarket -->|checkSanctions| WildcatSanctionsSentinel
+    HooksInstance -->|checkSanctions| WildcatSanctionsSentinel
+    WildcatSanctionsSentinel -->|querySanctionsList| ChainalysisOracle
+    WildcatSanctionsSentinel ==>|createEscrow| WildcatSanctionsEscrow
+    
+    %% State Updates
+    WildcatMarketBase -->|updateScaleFactor| WildcatMarketToken
+    WildcatMarketBase -->|accrueInterest| WildcatMarket
+    WildcatMarketToken -->|mintTokens| Lender
+    WildcatMarketToken -->|burnTokens| WildcatMarketWithdrawals
+    
+    %% Data Storage References
+    WildcatArchController -.->|stores| RegisteredBorrowers[Registered Borrowers<br/>mapping]:::dataStore
+    WildcatArchController -.->|stores| DeployedMarkets[Deployed Markets<br/>mapping]:::dataStore
+    WildcatMarket -.->|stores| TokenBalances[Token Balances<br/>mapping]:::dataStore
+    WildcatMarket -.->|stores| MarketState[Market State<br/>struct]:::dataStore
+    AccessControlHooks -.->|stores| KnownLenders[Known Lenders<br/>mapping]:::dataStore
+    AccessControlHooks -.->|stores| Credentials[Credentials<br/>mapping]:::dataStore
+    WildcatMarketWithdrawals -.->|stores| WithdrawalBatches[Withdrawal Batches<br/>mapping]:::dataStore
+    
+    %% Interface Implementations
+    WildcatArchController -.->|implements| IWildcatArchController
+    RoleProvider -.->|implements| IRoleProvider
+    
+    %% Legend
+    subgraph Legend
+        A1[Contract/Data]
+        A2((External Actor))
+        A3[Interface]
+        B1[A ==> B: Deploys/Creates]
+        B2[A --> B: Calls/Updates]
+        B3[A -.-> B: Inherits/Implements/Stores]
+    end

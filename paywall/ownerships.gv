@@ -1,0 +1,139 @@
+digraph WildcatV2_OwnershipPermissions {
+    rankdir=TB;
+    compound=true;
+    node [shape=box, style="rounded,filled", fontname="Arial"];
+    edge [fontname="Arial"];
+    
+    // Hierarchy levels with different colors
+    // Protocol level - dark purple
+    // Factory level - medium purple
+    // Market level - light purple
+    // User level - gray
+    
+    // Protocol Level
+    subgraph cluster_protocol {
+        label="Protocol Level";
+        style="filled,rounded";
+        fillcolor="#e6e6fa";
+        
+        node [fillcolor="#4B0082", fontcolor=white];
+        ProtocolMultisig [label="Protocol Multisig\n(Owner)", shape=hexagon];
+        WildcatArchController [label="WildcatArchController\n- Master Registry\n- Permission Gate"];
+    }
+    
+    // Factory Level
+    subgraph cluster_factory {
+        label="Factory Level";
+        style="filled,rounded";
+        fillcolor="#f0e6ff";
+        
+        node [fillcolor="#6A0DAD", fontcolor=white];
+        HooksFactory [label="HooksFactory\n- Market Deployer\n- Hooks Deployer"];
+        HooksTemplates [label="Hooks Templates\n- AccessControlHooks\n- MarketConstraintHooks\n- FixedTermLoanHooks"];
+    }
+    
+    // Market Level
+    subgraph cluster_market {
+        label="Market Level";
+        style="filled,rounded";
+        fillcolor="#f5f0ff";
+        
+        node [fillcolor="#9370DB", fontcolor=white];
+        MarketInstance [label="Market Instance\n- Borrower Owned\n- Hooks Controlled"];
+        HooksInstance [label="Hooks Instance\n- Access Rules\n- Constraints"];
+    }
+    
+    // User Level
+    subgraph cluster_users {
+        label="User Level";
+        style="filled,rounded";
+        fillcolor="#f5f5f5";
+        
+        node [fillcolor="#808080", fontcolor=white];
+        RegisteredBorrower [label="Registered Borrower\n- Can Deploy Markets\n- Configure Hooks"];
+        AuthorizedLender [label="Authorized Lender\n- Has Credential\n- Can Deposit/Withdraw"];
+        RoleProvider [label="Role Provider\n- Issues Credentials\n- Validates Access"];
+    }
+    
+    // Ownership Relationships (solid lines)
+    ProtocolMultisig -> WildcatArchController [label="owns", style=bold, color="#4B0082"];
+    WildcatArchController -> HooksFactory [label="authorizes", style=bold, color="#4B0082"];
+    RegisteredBorrower -> MarketInstance [label="owns", style=bold, color="#006400"];
+    RegisteredBorrower -> HooksInstance [label="configures", style=bold, color="#006400"];
+    
+    // Permission Flows (dashed lines)
+    ProtocolMultisig -> RegisteredBorrower [label="grants borrower role", style=dashed, color="#FF0000"];
+    WildcatArchController -> HooksTemplates [label="approves templates", style=dashed, color="#FF0000"];
+    HooksFactory -> MarketInstance [label="deploys with permissions", style=dashed, color="#FF0000"];
+    HooksFactory -> HooksInstance [label="deploys from template", style=dashed, color="#FF0000"];
+    
+    // Access Control (dotted lines)
+    HooksInstance -> AuthorizedLender [label="validates access", style=dotted, color="#0000FF"];
+    RoleProvider -> AuthorizedLender [label="issues credential", style=dotted, color="#0000FF"];
+    HooksInstance -> RoleProvider [label="trusts", style=dotted, color="#0000FF"];
+    
+    // Hierarchical Control
+    WildcatArchController -> RegisteredBorrower [label="can revoke", color="#8B0000", style=bold];
+    RegisteredBorrower -> RoleProvider [label="can add/remove", color="#8B0000", style=bold];
+    MarketInstance -> AuthorizedLender [label="can force withdraw", color="#8B0000", style=bold];
+    
+    // Permission Matrix
+    node [shape=plaintext];
+    PermissionMatrix [label=<
+        <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+            <TR>
+                <TD BGCOLOR="#4B0082" COLSPAN="5"><FONT COLOR="white"><B>Permission Hierarchy</B></FONT></TD>
+            </TR>
+            <TR>
+                <TD BGCOLOR="#d3d3d3"><B>Role</B></TD>
+                <TD BGCOLOR="#d3d3d3"><B>Deploy Markets</B></TD>
+                <TD BGCOLOR="#d3d3d3"><B>Configure Hooks</B></TD>
+                <TD BGCOLOR="#d3d3d3"><B>Deposit/Withdraw</B></TD>
+                <TD BGCOLOR="#d3d3d3"><B>Admin Functions</B></TD>
+            </TR>
+            <TR>
+                <TD>Protocol Owner</TD>
+                <TD BGCOLOR="#90EE90">✓ (indirect)</TD>
+                <TD BGCOLOR="#90EE90">✓ (templates)</TD>
+                <TD BGCOLOR="#FFB6C1">✗</TD>
+                <TD BGCOLOR="#90EE90">✓</TD>
+            </TR>
+            <TR>
+                <TD>Registered Borrower</TD>
+                <TD BGCOLOR="#90EE90">✓</TD>
+                <TD BGCOLOR="#90EE90">✓</TD>
+                <TD BGCOLOR="#90EE90">✓ (own markets)</TD>
+                <TD BGCOLOR="#FFFFE0">Limited</TD>
+            </TR>
+            <TR>
+                <TD>Authorized Lender</TD>
+                <TD BGCOLOR="#FFB6C1">✗</TD>
+                <TD BGCOLOR="#FFB6C1">✗</TD>
+                <TD BGCOLOR="#90EE90">✓</TD>
+                <TD BGCOLOR="#FFB6C1">✗</TD>
+            </TR>
+            <TR>
+                <TD>Role Provider</TD>
+                <TD BGCOLOR="#FFB6C1">✗</TD>
+                <TD BGCOLOR="#FFB6C1">✗</TD>
+                <TD BGCOLOR="#FFB6C1">✗</TD>
+                <TD BGCOLOR="#FFFFE0">Credential Mgmt</TD>
+            </TR>
+        </TABLE>
+    >];
+    
+    // Special Permissions
+    subgraph cluster_special {
+        label="Special Permissions";
+        style="filled,rounded";
+        fillcolor="#fff0f0";
+        
+        node [fillcolor="#FF6347", fontcolor=white, shape=diamond];
+        EmergencyPause [label="Emergency Pause\n(Protocol Only)"];
+        SanctionsOverride [label="Sanctions Override\n(None)"];
+        ForceWithdraw [label="Force Withdraw\n(Borrower Only)"];
+    }
+    
+    ProtocolMultisig -> EmergencyPause [label="exclusive", color="#FF0000", style=bold];
+    RegisteredBorrower -> ForceWithdraw [label="exclusive", color="#FF0000", style=bold];
+}

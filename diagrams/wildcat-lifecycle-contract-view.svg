@@ -1,0 +1,500 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 2800">
+  <defs>
+    <style>
+      .title { font-family: Arial, sans-serif; font-size: 32px; font-weight: bold; fill: #1A237E; text-anchor: middle; }
+      .contract-name { font-family: 'Courier New', monospace; font-size: 14px; font-weight: bold; text-anchor: middle; }
+      .contract-desc { font-family: Arial, sans-serif; font-size: 11px; text-anchor: middle; }
+      
+      .core { fill: #1565C0; stroke: #0D47A1; stroke-width: 2; }
+      .factory { fill: #F57C00; stroke: #E65100; stroke-width: 2; }
+      .market { fill: #2E7D32; stroke: #1B5E20; stroke-width: 2; }
+      .hooks { fill: #6A1B9A; stroke: #4A148C; stroke-width: 2; }
+      .security { fill: #C62828; stroke: #B71C1C; stroke-width: 2; }
+      .external { fill: #00695C; stroke: #004D40; stroke-width: 2; }
+      .lens { fill: #424242; stroke: #212121; stroke-width: 2; }
+      .library { fill: #795548; stroke: #5D4037; stroke-width: 2; }
+      
+      .deploy-line { fill: none; stroke: #FF5722; stroke-width: 3; stroke-dasharray: 8,4; }
+      .call-line { fill: none; stroke: #2196F3; stroke-width: 2.5; }
+      .hook-line { fill: none; stroke: #9C27B0; stroke-width: 2.5; stroke-dasharray: 4,3; }
+      .data-line { fill: none; stroke: #FF9800; stroke-width: 2; stroke-dasharray: 3,3; }
+      .inheritance-line { fill: none; stroke: #4CAF50; stroke-width: 3; }
+      
+      .white-text { fill: white; }
+      .label-text { font-family: Arial, sans-serif; font-size: 10px; fill: #333; }
+      .actor { fill: #4CAF50; stroke: #2E7D32; stroke-width: 3; }
+    </style>
+    
+    <marker id="deploy" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 z" fill="#FF5722"/>
+    </marker>
+    <marker id="call" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2196F3"/>
+    </marker>
+    <marker id="hook" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#9C27B0"/>
+    </marker>
+    <marker id="data" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#FF9800"/>
+    </marker>
+    <marker id="inherit" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 z" fill="#4CAF50"/>
+    </marker>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1800" height="2800" fill="#FAFAFA"/>
+  
+  <!-- Title -->
+  <text x="900" y="60" class="title">Wildcat Protocol V2 - Complete Contract Lifecycle</text>
+  
+  <!-- 1. CORE INFRASTRUCTURE -->
+  <g id="core-setup">
+    <!-- WildcatArchController.sol -->
+    <rect x="50" y="120" width="250" height="90" class="core" rx="8"/>
+    <text x="175" y="155" class="contract-name white-text">WildcatArchController.sol</text>
+    <text x="175" y="175" class="contract-desc white-text">Central Registry & Permissions</text>
+    <text x="175" y="195" class="contract-desc white-text">registerBorrower() | registerControllerFactory()</text>
+    
+    <!-- HooksFactory.sol -->
+    <rect x="350" y="120" width="250" height="90" class="factory" rx="8"/>
+    <text x="475" y="155" class="contract-name white-text">HooksFactory.sol</text>
+    <text x="475" y="175" class="contract-desc white-text">Deployment Orchestrator</text>
+    <text x="475" y="195" class="contract-desc white-text">deployMarket() | deployHooksInstance()</text>
+    
+    <!-- WildcatSanctionsSentinel.sol -->
+    <rect x="650" y="120" width="250" height="90" class="security" rx="8"/>
+    <text x="775" y="155" class="contract-name white-text">WildcatSanctionsSentinel.sol</text>
+    <text x="775" y="175" class="contract-desc white-text">Compliance Oracle Interface</text>
+    <text x="775" y="195" class="contract-desc white-text">isSanctioned() | createEscrow()</text>
+    
+    <!-- ReentrancyGuard.sol -->
+    <rect x="950" y="120" width="230" height="90" class="core" rx="8"/>
+    <text x="1065" y="155" class="contract-name white-text">ReentrancyGuard.sol</text>
+    <text x="1065" y="175" class="contract-desc white-text">Transient Storage Security</text>
+    <text x="1065" y="195" class="contract-desc white-text">_nonReentrant modifier</text>
+    
+    <!-- Supporting Libraries -->
+    <rect x="1230" y="120" width="230" height="90" class="library" rx="8"/>
+    <text x="1345" y="155" class="contract-name white-text">LibStoredInitCode.sol</text>
+    <text x="1345" y="175" class="contract-desc white-text">CREATE2 Optimization</text>
+    <text x="1345" y="195" class="contract-desc white-text">Store large initcode</text>
+    
+    <!-- Connections -->
+    <path d="M 300 165 L 350 165" class="call-line" marker-end="url(#call)"/>
+    <path d="M 600 165 L 650 165" class="call-line" marker-end="url(#call)"/>
+    <path d="M 900 165 L 950 165" class="call-line" marker-end="url(#call)"/>
+    <path d="M 1180 165 L 1230 165" class="data-line" marker-end="url(#data)"/>
+  </g>
+  
+  <!-- 2. HOOKS TEMPLATES -->
+  <g id="hooks-templates">
+    <!-- Factory deployment arrow -->
+    <path d="M 475 210 L 475 290" class="deploy-line" marker-end="url(#deploy)"/>
+    <text x="495" y="250" class="label-text">deploys templates</text>
+    
+    <!-- AccessControlHooks.sol -->
+    <rect x="80" y="290" width="230" height="110" class="hooks" rx="8"/>
+    <text x="195" y="325" class="contract-name white-text">AccessControlHooks.sol</text>
+    <text x="195" y="345" class="contract-desc white-text">Role-Based Access Control</text>
+    <text x="195" y="365" class="contract-desc white-text">• onDeposit() credential check</text>
+    <text x="195" y="385" class="contract-desc white-text">• onTransfer() role validation</text>
+    
+    <!-- FixedTermLoanHooks.sol -->
+    <rect x="360" y="290" width="230" height="110" class="hooks" rx="8"/>
+    <text x="475" y="325" class="contract-name white-text">FixedTermLoanHooks.sol</text>
+    <text x="475" y="345" class="contract-desc white-text">Fixed-Term Loan Markets</text>
+    <text x="475" y="365" class="contract-desc white-text">• Term enforcement</text>
+    <text x="475" y="385" class="contract-desc white-text">• Maturity date checks</text>
+    
+    <!-- MarketConstraintHooks.sol -->
+    <rect x="640" y="290" width="230" height="110" class="hooks" rx="8"/>
+    <text x="755" y="325" class="contract-name white-text">MarketConstraintHooks.sol</text>
+    <text x="755" y="345" class="contract-desc white-text">Base Hooks Template</text>
+    <text x="755" y="365" class="contract-desc white-text">• Parameter constraints</text>
+    <text x="755" y="385" class="contract-desc white-text">• Market limits validation</text>
+    
+    <!-- IHooks.sol interface -->
+    <rect x="920" y="290" width="210" height="110" class="hooks" rx="8" stroke-dasharray="5,5"/>
+    <text x="1025" y="325" class="contract-name white-text">IHooks.sol</text>
+    <text x="1025" y="345" class="contract-desc white-text">Hooks Interface</text>
+    <text x="1025" y="365" class="contract-desc white-text">• All hook definitions</text>
+    <text x="1025" y="385" class="contract-desc white-text">• Standard signatures</text>
+    
+    <!-- IRoleProvider.sol interface -->
+    <rect x="1180" y="290" width="210" height="110" class="external" rx="8" stroke-dasharray="5,5"/>
+    <text x="1285" y="325" class="contract-name white-text">IRoleProvider.sol</text>
+    <text x="1285" y="345" class="contract-desc white-text">External Role Provider</text>
+    <text x="1285" y="365" class="contract-desc white-text">• KYC/KYB credentials</text>
+    <text x="1285" y="385" class="contract-desc white-text">• Role verification</text>
+    
+    <!-- Connections -->
+    <path d="M 310 345 L 1180 345" class="call-line" marker-end="url(#call)"/>
+    <text x="745" y="340" class="label-text">credential verification</text>
+    <path d="M 870 345 L 920 345" class="data-line" marker-end="url(#data)"/>
+  </g>
+  
+  <!-- 3. MARKET DEPLOYMENT -->
+  <g id="market-deployment">
+    <!-- Factory to market deployment -->
+    <path d="M 475 400 L 475 510" class="deploy-line" marker-end="url(#deploy)"/>
+    <text x="495" y="455" class="label-text">deployMarket()</text>
+    
+    <!-- WildcatMarket.sol (main) -->
+    <rect x="330" y="510" width="320" height="140" class="market" rx="10"/>
+    <text x="490" y="550" class="contract-name white-text" font-size="16">WildcatMarket.sol</text>
+    <text x="490" y="575" class="contract-desc white-text">Complete Market Implementation</text>
+    <text x="490" y="595" class="contract-desc white-text">• depositUpTo() | borrow() | repay()</text>
+    <text x="490" y="615" class="contract-desc white-text">• queueWithdrawal() | executeWithdrawal()</text>
+    <text x="490" y="635" class="contract-desc white-text">• transfer() | closeMarket()</text>
+    
+    <!-- Market component inheritance -->
+    <rect x="30" y="530" width="170" height="100" class="market" rx="6"/>
+    <text x="115" y="570" class="contract-name white-text">WildcatMarketBase.sol</text>
+    <text x="115" y="590" class="contract-desc white-text">Core Market Logic</text>
+    <text x="115" y="610" class="contract-desc white-text">State management</text>
+    
+    <rect x="220" y="530" width="170" height="100" class="market" rx="6"/>
+    <text x="305" y="570" class="contract-name white-text">WildcatMarketConfig.sol</text>
+    <text x="305" y="590" class="contract-desc white-text">Configuration Mgmt</text>
+    <text x="305" y="610" class="contract-desc white-text">APR, reserve ratios</text>
+    
+    <rect x="670" y="530" width="170" height="100" class="market" rx="6"/>
+    <text x="755" y="570" class="contract-name white-text">WildcatMarketToken.sol</text>
+    <text x="755" y="590" class="contract-desc white-text">ERC20 Implementation</text>
+    <text x="755" y="610" class="contract-desc white-text">Market shares</text>
+    
+    <rect x="860" y="530" width="170" height="100" class="market" rx="6"/>
+    <text x="945" y="570" class="contract-name white-text">WildcatMarketWithdrawals.sol</text>
+    <text x="945" y="590" class="contract-desc white-text">Withdrawal Processing</text>
+    <text x="945" y="610" class="contract-desc white-text">Batch management</text>
+    
+    <!-- Inheritance arrows -->
+    <path d="M 200 580 L 330 580" class="inheritance-line" marker-end="url(#inherit)"/>
+    <path d="M 390 580 L 330 580" class="inheritance-line"/>
+    <path d="M 650 580 L 670 580" class="inheritance-line" marker-end="url(#inherit)"/>
+    <path d="M 650 580 L 860 580" class="inheritance-line" marker-end="url(#inherit)"/>
+    
+    <text x="265" y="555" class="label-text">inherits</text>
+    <text x="760" y="555" class="label-text">inherits</text>
+  </g>
+  
+  <!-- 4. MARKET LIBRARIES -->
+  <g id="market-libraries">
+    <!-- Core State Libraries -->
+    <rect x="1100" y="510" width="180" height="80" class="library" rx="6"/>
+    <text x="1190" y="540" class="contract-name white-text">MarketState.sol</text>
+    <text x="1190" y="560" class="contract-desc white-text">State Management</text>
+    <text x="1190" y="580" class="contract-desc white-text">Interest calculations</text>
+    
+    <rect x="1100" y="610" width="180" height="80" class="library" rx="6"/>
+    <text x="1190" y="640" class="contract-name white-text">FeeMath.sol</text>
+    <text x="1190" y="660" class="contract-desc white-text">Fee Calculations</text>
+    <text x="1190" y="680" class="contract-desc white-text">Protocol fees</text>
+    
+    <rect x="1100" y="710" width="180" height="80" class="library" rx="6"/>
+    <text x="1190" y="740" class="contract-name white-text">Withdrawal.sol</text>
+    <text x="1190" y="760" class="contract-desc white-text">Withdrawal Logic</text>
+    <text x="1190" y="780" class="contract-desc white-text">Batch processing</text>
+    
+    <rect x="1320" y="510" width="180" height="80" class="library" rx="6"/>
+    <text x="1410" y="540" class="contract-name white-text">FIFOQueue.sol</text>
+    <text x="1410" y="560" class="contract-desc white-text">Queue Management</text>
+    <text x="1410" y="580" class="contract-desc white-text">24hr batch cycles</text>
+    
+    <rect x="1320" y="610" width="180" height="80" class="library" rx="6"/>
+    <text x="1410" y="640" class="contract-name white-text">MathUtils.sol</text>
+    <text x="1410" y="660" class="contract-desc white-text">Math Operations</text>
+    <text x="1410" y="680" class="contract-desc white-text">Safe calculations</text>
+    
+    <rect x="1320" y="710" width="180" height="80" class="library" rx="6"/>
+    <text x="1410" y="740" class="contract-name white-text">SafeCastLib.sol</text>
+    <text x="1410" y="760" class="contract-desc white-text">Type Conversions</text>
+    <text x="1410" y="780" class="contract-desc white-text">Overflow protection</text>
+    
+    <!-- Library usage -->
+    <path d="M 650 580 L 1100 550" class="data-line" marker-end="url(#data)"/>
+    <path d="M 650 600 L 1100 650" class="data-line" marker-end="url(#data)"/>
+    <path d="M 650 620 L 1100 750" class="data-line" marker-end="url(#data)"/>
+  </g>
+  
+  <!-- 5. LENDER OPERATIONS -->
+  <g id="lender-operations">
+    <!-- Lender Actor -->
+    <circle cx="150" cy="880" r="50" class="actor"/>
+    <text x="150" y="890" class="contract-name white-text">LENDER</text>
+    
+    <!-- Deposit transaction flow -->
+    <path d="M 200 880 L 350 880" class="call-line" marker-end="url(#call)"/>
+    <text x="275" y="875" class="label-text">depositUpTo(amount)</text>
+    
+    <!-- Market processes deposit -->
+    <rect x="350" y="840" width="200" height="100" class="market" rx="8"/>
+    <text x="450" y="875" class="contract-name white-text">WildcatMarket.sol</text>
+    <text x="450" y="895" class="contract-desc white-text">Lender Operations</text>
+    <text x="450" y="915" class="contract-desc white-text">Balance updates & scaling</text>
+    
+    <!-- Hook callback to access control -->
+    <path d="M 550 880 L 650 830" class="hook-line" marker-end="url(#hook)"/>
+    <text x="600" y="850" class="label-text">onDeposit(lender, amount, data)</text>
+    
+    <rect x="650" y="800" width="200" height="80" class="hooks" rx="6"/>
+    <text x="750" y="830" class="contract-name white-text">AccessControlHooks Instance</text>
+    <text x="750" y="855" class="contract-desc white-text">Role verification & credentials</text>
+    
+    <!-- Sanctions check -->
+    <path d="M 450 940 L 750 1000" class="call-line" marker-end="url(#call)"/>
+    <text x="600" y="975" class="label-text">sanctions check</text>
+    
+    <rect x="700" y="1000" width="180" height="80" class="security" rx="6"/>
+    <text x="790" y="1030" class="contract-name white-text">WildcatSanctionsSentinel.sol</text>
+    <text x="790" y="1055" class="contract-desc white-text">isSanctioned(account)</text>
+    
+    <!-- Asset transfer -->
+    <path d="M 550 860 L 1000 860" class="call-line" marker-end="url(#call)"/>
+    <text x="775" y="855" class="label-text">IERC20.transferFrom(lender, market, amount)</text>
+    
+    <rect x="1000" y="830" width="170" height="80" class="external" rx="6"/>
+    <text x="1085" y="860" class="contract-name white-text">IERC20 Asset</text>
+    <text x="1085" y="885" class="contract-desc white-text">USDC/DAI/WETH etc</text>
+    
+    <!-- Role provider check -->
+    <path d="M 850 830 L 1200 760" class="call-line" marker-end="url(#call)"/>
+    <text x="1025" y="790" class="label-text">validateCredentials()</text>
+    
+    <rect x="1200" y="740" width="170" height="80" class="external" rx="6"/>
+    <text x="1285" y="770" class="contract-name white-text">External Role Provider</text>
+    <text x="1285" y="795" class="contract-desc white-text">KYC/KYB verification</text>
+  </g>
+  
+  <!-- 6. BORROWER OPERATIONS -->
+  <g id="borrower-operations">
+    <!-- Borrower Actor -->
+    <circle cx="150" cy="1180" r="50" fill="#FF9800" stroke="#F57C00" stroke-width="3"/>
+    <text x="150" y="1190" class="contract-name white-text">BORROWER</text>
+    
+    <!-- Borrow transaction flow -->
+    <path d="M 200 1180 L 350 1180" class="call-line" marker-end="url(#call)"/>
+    <text x="275" y="1175" class="label-text">borrow(amount)</text>
+    
+    <!-- Market processes borrow -->
+    <rect x="350" y="1140" width="200" height="100" class="market" rx="8"/>
+    <text x="450" y="1175" class="contract-name white-text">WildcatMarket.sol</text>
+    <text x="450" y="1195" class="contract-desc white-text">Borrower Operations</text>
+    <text x="450" y="1215" class="contract-desc white-text">State updates & validation</text>
+    
+    <!-- State management libraries -->
+    <path d="M 550 1180 L 650 1130" class="data-line" marker-end="url(#data)"/>
+    <text x="600" y="1150" class="label-text">updateScaleFactorAndFees()</text>
+    
+    <rect x="650" y="1100" width="180" height="80" class="library" rx="6"/>
+    <text x="740" y="1130" class="contract-name white-text">MarketState.sol</text>
+    <text x="740" y="1155" class="contract-desc white-text">Interest & liquidity calc</text>
+    
+    <!-- Fee calculation -->
+    <path d="M 830 1140 L 920 1140" class="data-line" marker-end="url(#data)"/>
+    <rect x="920" y="1100" width="160" height="80" class="library" rx="6"/>
+    <text x="1000" y="1130" class="contract-name white-text">FeeMath.sol</text>
+    <text x="1000" y="1155" class="contract-desc white-text">Protocol fee calc</text>
+    
+    <!-- Hook callback -->
+    <path d="M 550 1160 L 650 1220" class="hook-line" marker-end="url(#hook)"/>
+    <text x="600" y="1195" class="label-text">onBorrow(amount, data)</text>
+    
+    <rect x="650" y="1220" width="180" height="80" class="hooks" rx="6"/>
+    <text x="740" y="1250" class="contract-name white-text">Hooks Instance</text>
+    <text x="740" y="1275" class="contract-desc white-text">Borrow validations</text>
+    
+    <!-- Asset transfer to borrower -->
+    <path d="M 450 1240 L 650 1340" class="call-line" marker-end="url(#call)"/>
+    <text x="550" y="1295" class="label-text">IERC20.transfer(borrower, amount)</text>
+    
+    <rect x="650" y="1340" width="180" height="80" class="external" rx="6"/>
+    <text x="740" y="1370" class="contract-name white-text">IERC20 Asset</text>
+    <text x="740" y="1395" class="contract-desc white-text">Transfer to borrower</text>
+  </g>
+  
+  <!-- 7. WITHDRAWAL PROCESSING -->
+  <g id="withdrawal-processing">
+    <!-- Lender initiates withdrawal -->
+    <circle cx="150" cy="1520" r="50" class="actor"/>
+    <text x="150" y="1530" class="contract-name white-text">LENDER</text>
+    
+    <!-- Queue withdrawal -->
+    <path d="M 200 1520 L 330 1520" class="call-line" marker-end="url(#call)"/>
+    <text x="265" y="1515" class="label-text">queueWithdrawal(amount)</text>
+    
+    <rect x="330" y="1480" width="190" height="100" class="market" rx="8"/>
+    <text x="425" y="1515" class="contract-name white-text">WildcatMarket.sol</text>
+    <text x="425" y="1535" class="contract-desc white-text">Queue Withdrawal</text>
+    <text x="425" y="1555" class="contract-desc white-text">Add to current batch</text>
+    
+    <!-- FIFO Queue management -->
+    <path d="M 520 1520 L 600 1520" class="data-line" marker-end="url(#data)"/>
+    <rect x="600" y="1480" width="170" height="100" class="library" rx="8"/>
+    <text x="685" y="1515" class="contract-name white-text">FIFOQueue.sol</text>
+    <text x="685" y="1535" class="contract-desc white-text">Batch Management</text>
+    <text x="685" y="1555" class="contract-desc white-text">24hr withdrawal cycles</text>
+    
+    <!-- Hook callback for withdrawal queue -->
+    <path d="M 520 1500 L 600 1440" class="hook-line" marker-end="url(#hook)"/>
+    <text x="560" y="1465" class="label-text">onQueueWithdrawal()</text>
+    
+    <rect x="600" y="1400" width="170" height="100" class="hooks" rx="6"/>
+    <text x="685" y="1435" class="contract-name white-text">Hooks Instance</text>
+    <text x="685" y="1455" class="contract-desc white-text">Withdrawal validation</text>
+    <text x="685" y="1475" class="contract-desc white-text">Transfer restrictions</text>
+    
+    <!-- Wait period -->
+    <rect x="820" y="1480" width="150" height="100" fill="#FFC107" stroke="#F57C00" stroke-width="2" rx="8"/>
+    <text x="895" y="1515" class="contract-name">WAIT PERIOD</text>
+    <text x="895" y="1535" class="contract-desc">Batch Expiry</text>
+    <text x="895" y="1555" class="contract-desc">~24 hours</text>
+    
+    <!-- Execute withdrawal after batch expiry -->
+    <path d="M 425 1580 L 425 1680" class="call-line" marker-end="url(#call)"/>
+    <text x="445" y="1630" class="label-text">executeWithdrawal()</text>
+    
+    <rect x="330" y="1680" width="190" height="100" class="market" rx="8"/>
+    <text x="425" y="1715" class="contract-name white-text">WildcatMarket.sol</text>
+    <text x="425" y="1735" class="contract-desc white-text">Execute Withdrawal</text>
+    <text x="425" y="1755" class="contract-desc white-text">Process expired batch</text>
+    
+    <!-- Withdrawal library processing -->
+    <path d="M 520 1730 L 600 1730" class="data-line" marker-end="url(#data)"/>
+    <rect x="600" y="1680" width="170" height="100" class="library" rx="8"/>
+    <text x="685" y="1715" class="contract-name white-text">Withdrawal.sol</text>
+    <text x="685" y="1735" class="contract-desc white-text">Batch Processing</text>
+    <text x="685" y="1755" class="contract-desc white-text">Pro-rata calculations</text>
+    
+    <!-- Hook callback for execution -->
+    <path d="M 520 1710 L 800 1650" class="hook-line" marker-end="url(#hook)"/>
+    <text x="660" y="1675" class="label-text">onExecuteWithdrawal()</text>
+    
+    <rect x="800" y="1620" width="170" height="100" class="hooks" rx="6"/>
+    <text x="885" y="1655" class="contract-name white-text">Hooks Instance</text>
+    <text x="885" y="1675" class="contract-desc white-text">Execution validation</text>
+    <text x="885" y="1695" class="contract-desc white-text">Final checks</text>
+    
+    <!-- Asset return to lender -->
+    <path d="M 425 1780 L 600 1850" class="call-line" marker-end="url(#call)"/>
+    <text x="512" y="1820" class="label-text">IERC20.transfer(lender, amount)</text>
+    
+    <rect x="600" y="1820" width="170" height="80" class="external" rx="6"/>
+    <text x="685" y="1850" class="contract-name white-text">IERC20 Asset</text>
+    <text x="685" y="1875" class="contract-desc white-text">Return funds to lender</text>
+  </g>
+  
+  <!-- 8. SANCTIONS HANDLING -->
+  <g id="sanctions-handling">
+    <!-- Sanctioned user path -->
+    <path d="M 790 1080 L 1050 1150" class="deploy-line" marker-end="url(#deploy)"/>
+    <text x="920" y="1120" class="label-text">if sanctioned</text>
+    
+    <rect x="1050" y="1120" width="200" height="80" class="security" rx="6"/>
+    <text x="1150" y="1150" class="contract-name white-text">WildcatSanctionsEscrow.sol</text>
+    <text x="1150" y="1175" class="contract-desc white-text">Hold blocked funds</text>
+    
+    <!-- Chainalysis Oracle integration -->
+    <path d="M 880 1040 L 1050 1040" class="call-line" marker-end="url(#call)"/>
+    <text x="965" y="1035" class="label-text">sanctions oracle query</text>
+    
+    <rect x="1050" y="1000" width="200" height="80" class="external" rx="6"/>
+    <text x="1150" y="1030" class="contract-name white-text">IChainalysisSanctionsList.sol</text>
+    <text x="1150" y="1055" class="contract-desc white-text">Chainalysis Oracle Interface</text>
+  </g>
+  
+  <!-- 9. LENS/ANALYTICS LAYER -->
+  <g id="analytics-layer">
+    <!-- MarketLens.sol -->
+    <rect x="200" y="2000" width="280" height="120" class="lens" rx="8"/>
+    <text x="340" y="2040" class="contract-name white-text">MarketLens.sol</text>
+    <text x="340" y="2060" class="contract-desc white-text">Read-Only Data Aggregation</text>
+    <text x="340" y="2080" class="contract-desc white-text">• getMarketData() | getLenderAccount()</text>
+    <text x="340" y="2100" class="contract-desc white-text">• getWithdrawalBatch() | getHooksConfig()</text>
+    
+    <!-- Supporting data structures -->
+    <rect x="520" y="1950" width="170" height="90" class="lens" rx="6"/>
+    <text x="605" y="1985" class="contract-name white-text">LenderAccountData.sol</text>
+    <text x="605" y="2005" class="contract-desc white-text">Account Information</text>
+    <text x="605" y="2025" class="contract-desc white-text">Balances & status</text>
+    
+    <rect x="520" y="2060" width="170" height="90" class="lens" rx="6"/>
+    <text x="605" y="2095" class="contract-name white-text">MarketData.sol</text>
+    <text x="605" y="2115" class="contract-desc white-text">Market Statistics</text>
+    <text x="605" y="2135" class="contract-desc white-text">APR, supply, reserves</text>
+    
+    <rect x="520" y="2170" width="170" height="90" class="lens" rx="6"/>
+    <text x="605" y="2205" class="contract-name white-text">WithdrawalBatchData.sol</text>
+    <text x="605" y="2225" class="contract-desc white-text">Batch Information</text>
+    <text x="605" y="2245" class="contract-desc white-text">Queue status & timing</text>
+    
+    <rect x="720" y="2000" width="170" height="120" class="lens" rx="6"/>
+    <text x="805" y="2040" class="contract-name white-text">HooksConfigData.sol</text>
+    <text x="805" y="2060" class="contract-desc white-text">Hooks Configuration</text>
+    <text x="805" y="2080" class="contract-desc white-text">Access rules</text>
+    <text x="805" y="2100" class="contract-desc white-text">Template info</text>
+    
+    <!-- Read connections from operational layers -->
+    <path d="M 450 1780 L 340 2000" class="data-line" marker-end="url(#data)"/>
+    <path d="M 685 1780 L 605 1950" class="data-line" marker-end="url(#data)"/>
+    <path d="M 750 880 L 805 2000" class="data-line" marker-end="url(#data)"/>
+    
+    <!-- Internal lens connections -->
+    <path d="M 480 2020 L 520 1995" class="data-line" marker-end="url(#data)"/>
+    <path d="M 480 2050 L 520 2105" class="data-line" marker-end="url(#data)"/>
+    <path d="M 480 2080 L 520 2215" class="data-line" marker-end="url(#data)"/>
+    <path d="M 480 2060 L 720 2060" class="data-line" marker-end="url(#data)"/>
+  </g>
+  
+  <!-- Enhanced Legend -->
+  <g id="enhanced-legend">
+    <rect x="50" y="2350" width="1400" height="180" fill="white" stroke="#ddd" stroke-width="2" rx="8"/>
+    <text x="750" y="2380" class="contract-name" text-anchor="middle" font-size="16">Contract Interaction Legend</text>
+    
+    <!-- Connection types -->
+    <line x1="100" y1="2410" x2="150" y2="2410" class="deploy-line" marker-end="url(#deploy)"/>
+    <text x="160" y="2415" class="label-text">Deploy/Create Contract</text>
+    
+    <line x1="100" y1="2435" x2="150" y2="2435" class="call-line" marker-end="url(#call)"/>
+    <text x="160" y="2440" class="label-text">Function Call/Transaction</text>
+    
+    <line x1="100" y1="2460" x2="150" y2="2460" class="hook-line" marker-end="url(#hook)"/>
+    <text x="160" y="2465" class="label-text">Hook Callback</text>
+    
+    <line x1="100" y1="2485" x2="150" y2="2485" class="data-line" marker-end="url(#data)"/>
+    <text x="160" y="2490" class="label-text">Data Flow/Library Usage</text>
+    
+    <line x1="380" y1="2410" x2="430" y2="2410" class="inheritance-line" marker-end="url(#inherit)"/>
+    <text x="440" y="2415" class="label-text">Contract Inheritance</text>
+    
+    <!-- Contract types -->
+    <rect x="650" y="2400" width="30" height="25" class="core"/>
+    <text x="690" y="2418" class="label-text">Core Infrastructure</text>
+    
+    <rect x="650" y="2430" width="30" height="25" class="factory"/>
+    <text x="690" y="2448" class="label-text">Factory/Deployment</text>
+    
+    <rect x="650" y="2460" width="30" height="25" class="market"/>
+    <text x="690" y="2478" class="label-text">Market Contracts</text>
+    
+    <rect x="650" y="2490" width="30" height="25" class="hooks"/>
+    <text x="690" y="2508" class="label-text">Hooks System</text>
+    
+    <rect x="900" y="2400" width="30" height="25" class="security"/>
+    <text x="940" y="2418" class="label-text">Security/Compliance</text>
+    
+    <rect x="900" y="2430" width="30" height="25" class="external"/>
+    <text x="940" y="2448" class="label-text">External Integrations</text>
+    
+    <rect x="900" y="2460" width="30" height="25" class="library"/>
+    <text x="940" y="2478" class="label-text">Libraries/Utils</text>
+    
+    <rect x="900" y="2490" width="30" height="25" class="lens"/>
+    <text x="940" y="2508" class="label-text">Analytics/Read-Only</text>
+    
+    <text x="100" y="2520" class="label-text font-weight:bold">Vertical Flow: Infrastructure Setup → Hooks Deployment → Market Creation → User Operations → Analytics</text>
+  </g>
+  
+</svg>

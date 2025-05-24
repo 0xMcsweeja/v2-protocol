@@ -1,0 +1,256 @@
+flowchart TD
+    Start(["Lender Initiates Deposit"])
+    
+    Start --> UpdateState1["WildcatMarket.sol<br/><br/>Get Updated Market State<br/><br/>_getUpdatedState()"]
+    UpdateState1 --> CheckMarketClosed{"Market<br/>Closed?<br/><br/>state.isClosed"}
+    CheckMarketClosed -- Yes --> RejectDeposit["Reject Deposit"]
+    CheckMarketClosed -- No --> CheckMaxSupply{"Within Max<br/>Supply Limit?<br/><br/>state.maximumDeposit()"}
+    CheckMaxSupply -- No --> LimitAmount["Limit to Maximum Available<br/><br/>MathUtils.min()"]
+    CheckMaxSupply -- Yes --> ScaleAmount
+    LimitAmount --> ScaleAmount["Scale Amount & Validate > 0<br/><br/>state.scaleAmount()<br/>toUint104()"]
+    ScaleAmount --> ScaleZero{"Scaled Amount<br/>= 0?"}
+    ScaleZero -- Yes --> RejectDeposit
+    ScaleZero -- No --> GetAccount["Get Account Data<br/><br/>_getAccount()"]
+    GetAccount --> CallDepositHook["AccessControlHooks.sol<br/><br/>Call deposit hook validation<br/><br/>hooks.onDeposit()"]
+    
+    CallDepositHook --> CheckKnownLender{"Is Known Lender<br/>on Market?<br/><br/>isKnownLenderOnMarket"}
+    CheckKnownLender -- Yes --> TransferAssets
+    CheckKnownLender -- No --> ValidateCredentials{"Valid<br/>Credentials?<br/><br/>_lenderStatus.isApproved"}
+    ValidateCredentials -- No --> CheckPullProviders{"Pull Providers<br/>Available?<br/><br/>_pullProviders.length"}
+    ValidateCredentials -- Yes --> CheckMinDeposit{"Meets Minimum<br/>Deposit?<br/><br/>minimumDeposit"}
+    CheckMinDeposit -- No --> RejectDeposit
+    CheckMinDeposit -- Yes --> CheckNotBlocked{"Not Blocked<br/>from Deposits?<br/><br/>!_lenderStatus.canRefresh"}
+    CheckNotBlocked -- No --> RejectDeposit
+    CheckNotBlocked -- Yes --> TransferAssets
+    
+    CheckPullProviders -- No --> RejectDeposit
+    CheckPullProviders -- Yes --> PullCredential["Pull Credential from Provider<br/><br/>pullProviderCredential()"]
+    PullCredential --> ValidateCredentials
+    
+    TransferAssets["LibERC20.sol<br/><br/>Transfer assets from lender<br/><br/>asset.safeTransferFrom()"]
+    TransferAssets --> UpdateAccountBalance["Update Account Balance<br/><br/>account.scaledBalance"]
+    UpdateAccountBalance --> WriteState1["Write Market State<br/><br/>_writeState()"]
+    WriteState1 --> Success(["Deposit Complete"])
+    
+    RejectDeposit --> Fail(["Deposit Failed"])
+
+    subgraph "Market Configuration Operations"
+        OpStart(["Market Configuration Request"])
+        OpStart --> OpType{"Operation<br/>Type?"}
+        
+        OpType -- "Set Max Supply" --> CheckBorrower1{"WildcatMarketConfig.sol<br/><br/>Is Borrower?<br/><br/>onlyBorrower"}
+        CheckBorrower1 -- No --> OpReject["Reject Operation"]
+        CheckBorrower1 -- Yes --> UpdateMaxSupply["Update maximum supply<br/><br/>setMaxTotalSupply()"]
+        UpdateMaxSupply --> OpSuccess(["Operation Success"])
+        
+        OpType -- "Set APR & Reserve" --> CheckBorrower2{"WildcatMarketConfig.sol<br/><br/>Is Borrower?<br/><br/>onlyBorrower"}
+        CheckBorrower2 -- No --> OpReject
+        CheckBorrower2 -- Yes --> CallAPRHook["FixedTermLoanHooks.sol<br/><br/>Call APR validation hook<br/><br/>hooks.onSetAnnualInterestAndReserveRatioBips()"]
+        CallAPRHook --> CheckFixedTerm{"Fixed Term<br/>Active?<br/><br/>fixedTermEndTime > block.timestamp"}
+        CheckFixedTerm -- Yes --> CheckAPRIncrease{"APR<br/>Increasing?<br/><br/>newAPR >= currentAPR"}
+        CheckFixedTerm -- No --> CheckConstraints
+        CheckAPRIncrease -- No --> OpReject
+        CheckAPRIncrease -- Yes --> CheckConstraints["MarketConstraintHooks.sol<br/><br/>Check Parameter Constraints<br/><br/>constraints.validateParameters()"]
+        CheckConstraints --> ConstraintsOK{"Within<br/>Constraints?"}
+        ConstraintsOK -- No --> OpReject
+        ConstraintsOK -- Yes --> CheckAPRDecrease{"APR<br/>Decreasing?<br/><br/>newAPR < currentAPR"}
+        CheckAPRDecrease -- Yes --> SetTempReserve["Set Temporary Higher Reserve Ratio<br/><br/>setTemporaryReserveRatio()"]
+        CheckAPRDecrease -- No --> UpdateAPRReserve
+        SetTempReserve --> UpdateAPRReserve["Update APR & Reserve Ratio<br/><br/>setAnnualInterestAndReserveRatioBips()"]
+        UpdateAPRReserve --> OpSuccess
+        
+        OpType -- "Set Protocol Fee" --> CheckFactory{"WildcatMarketConfig.sol<br/><br/>Is Factory?<br/><br/>onlyFactory"}
+        CheckFactory -- No --> OpReject
+        CheckFactory -- Yes --> UpdateProtocolFee["Update protocol fee<br/><br/>setProtocolFeeBips()"]
+        UpdateProtocolFee --> OpSuccess
+        
+        OpType -- "Close Market" --> CheckBorrower3{"WildcatMarket.sol<br/><br/>Is Borrower?<br/><br/>onlyBorrower"}
+        CheckBorrower3 -- No --> OpReject
+        CheckBorrower3 -- Yes --> CallCloseHook["Call close market hook<br/><br/>hooks.onCloseMarket()"]
+        CallCloseHook --> SettleDebts["Settle All Outstanding Debts<br/><br/>repay()"]
+        SettleDebts --> CloseMarket["Close Market<br/><br/>closeMarket()"]
+        CloseMarket --> OpSuccess
+        
+        OpType -- "Collect Fees" --> CheckFeeRecipient{"WildcatMarket.sol<br/><br/>Is Fee Recipient or Borrower?<br/><br/>msg.sender == feeRecipient"}
+        CheckFeeRecipient -- No --> OpReject
+        CheckFeeRecipient -- Yes --> CollectFees["Transfer Protocol Fees<br/><br/>collectFees()"]
+        CollectFees --> OpSuccess
+        
+        OpReject --> OpFail(["Operation Failed"])
+    end
+
+    subgraph "Withdrawal Process"
+        WStart(["Withdrawal Request"])
+        WStart --> WType{"Withdrawal<br/>Type?"}
+        WType -- "Queue Withdrawal" --> WUpdateState["WildcatMarketWithdrawals.sol<br/><br/>Get Updated State<br/><br/>_getUpdatedState()"]
+        WType -- "Queue Full" --> WUpdateState
+        
+        WUpdateState --> WScaleAmount["Scale Amount & Validate > 0<br/><br/>state.scaleAmount()<br/>toUint104()"]
+        WScaleAmount --> WScaleZero{"Scaled Amount<br/>= 0?"}
+        WScaleZero -- Yes --> WReject["Reject Withdrawal"]
+        WScaleZero -- No --> WGetAccount["Get Account Data<br/><br/>_getAccount()"]
+        WGetAccount --> WCallHook["AccessControlHooks.sol<br/><br/>Call withdrawal hook validation<br/><br/>hooks.onQueueWithdrawal()"]
+        
+        WCallHook --> WCheckFixedTerm{"FixedTermLoanHooks.sol<br/><br/>Fixed Term Active?<br/><br/>fixedTermEndTime > block.timestamp"}
+        WCheckFixedTerm -- Yes --> WCheckExpiry{"Term<br/>Expired?"}
+        WCheckExpiry -- No --> WReject
+        WCheckExpiry -- Yes --> WCheckCredentials
+        WCheckFixedTerm -- No --> WCheckCredentials{"Known Lender OR<br/>Valid Credentials?<br/><br/>isKnownLenderOnMarket<br/>_lenderStatus.isApproved"}
+        WCheckCredentials -- No --> WReject
+        WCheckCredentials -- Yes --> WUpdateBalance["Update Account Balance<br/><br/>account.scaledBalance"]
+        
+        WUpdateBalance --> WCreateBatch{"Create/Update<br/>Withdrawal Batch<br/><br/>_withdrawalBatches"}
+        WCreateBatch --> WProcessLiquidity["Process Available Liquidity<br/><br/>_applyWithdrawalBatchPayment()"]
+        WProcessLiquidity --> WWriteState["Write Market State<br/><br/>_writeState()"]
+        WWriteState --> WSuccess(["Withdrawal Queued"])
+        WReject --> WFail(["Withdrawal Failed"])
+    end
+
+    subgraph "Batch Execution Process"
+        BatchStart(["Execute Withdrawal Batch"])
+        BatchStart --> BatchUpdateState["WildcatMarketWithdrawals.sol<br/><br/>Get Updated State<br/><br/>_getUpdatedState()"]
+        BatchUpdateState --> CheckBatchExpiry{"Batch<br/>Expired?<br/><br/>expiry <= block.timestamp"}
+        CheckBatchExpiry -- No --> BatchReject["Reject Execution"]
+        CheckBatchExpiry -- Yes --> CheckBatchStatus{"Batch<br/>Already Paid?<br/><br/>batch.scaledAmountBurned > 0"}
+        CheckBatchStatus -- Yes --> BatchReject
+        CheckBatchStatus -- No --> ProcessBatch["Process Withdrawal Batch<br/><br/>WithdrawalLib.processWithdrawal()"]
+        ProcessBatch --> CheckAvailableLiquidity{"Sufficient<br/>Liquidity?<br/><br/>state.liquidityRequired()"}
+        CheckAvailableLiquidity -- No --> PartialExecution["Mark Partial Payment<br/><br/>batch.scaledAmountBurned"]
+        CheckAvailableLiquidity -- Yes --> FullExecution["Mark Full Payment<br/><br/>batch.scaledAmountBurned"]
+        
+        PartialExecution --> TransferPayment["Transfer Available Assets<br/><br/>asset.safeTransfer()"]
+        FullExecution --> TransferPayment
+        TransferPayment --> UpdateBatchState["Update Batch State<br/><br/>_withdrawalBatches"]
+        UpdateBatchState --> BatchWriteState["Write Market State<br/><br/>_writeState()"]
+        BatchWriteState --> BatchSuccess(["Batch Executed"])
+        BatchReject --> BatchFail(["Batch Execution Failed"])
+    end
+
+    subgraph "Transfer Process"
+        TStart(["Transfer Request"])
+        TStart --> TGetState["WildcatMarketToken.sol<br/><br/>Get Account State<br/><br/>_getAccountWithRole()"]
+        TGetState --> TCheckBalance{"Sufficient<br/>Balance?<br/><br/>account.scaledBalance"}
+        TCheckBalance -- No --> TReject["Reject Transfer"]
+        TCheckBalance -- Yes --> TCallHook["AccessControlHooks.sol<br/><br/>Call transfer hook validation<br/><br/>hooks.onTransfer()"]
+        TCallHook --> TCheckFromKnown{"From Address<br/>Known Lender?<br/><br/>isKnownLenderOnMarket"}
+        TCheckFromKnown -- No --> TCheckFromCred{"From Address<br/>Valid Credentials?<br/><br/>_lenderStatus.isApproved"}
+        TCheckFromKnown -- Yes --> TCheckToKnown
+        TCheckFromCred -- No --> TReject
+        TCheckFromCred -- Yes --> TCheckToKnown{"To Address<br/>Known Lender?<br/><br/>isKnownLenderOnMarket"}
+        TCheckToKnown -- No --> TCheckToCred{"To Address<br/>Valid Credentials?<br/><br/>_lenderStatus.isApproved"}
+        TCheckToKnown -- Yes --> TExecute
+        TCheckToCred -- No --> TReject
+        TCheckToCred -- Yes --> TExecute["Execute Transfer<br/><br/>_transfer()"]
+        
+        TExecute --> TUpdateBalances["Update Scaled Balances<br/><br/>_scaledBalances"]
+        TUpdateBalances --> TMarkKnown["Mark Recipient as Known Lender<br/><br/>isKnownLenderOnMarket"]
+        TMarkKnown --> TSuccess(["Transfer Complete"])
+        TReject --> TFail(["Transfer Failed"])
+    end
+
+    subgraph "Hooks Template Management"
+        HTStart(["Hooks Template Operation"])
+        HTStart --> HTType{"Operation<br/>Type?"}
+        
+        HTType -- "Add Template" --> HTCheckOwner{"HooksFactory.sol<br/><br/>Is Protocol Owner?<br/><br/>archController.isRegisteredBorrower()"}
+        HTCheckOwner -- No --> HTFail(["Operation Failed"])
+        HTCheckOwner -- Yes --> HTValidate["Validate Template Interface<br/><br/>IHooks.supportsInterface()"]
+        HTValidate --> HTStore["Store in hooksTemplates[]<br/><br/>addHooksTemplate()"]
+        HTStore --> HTSuccess(["Template Added"])
+        
+        HTType -- "Deploy Instance" --> HTCheckBorrower{"HooksFactory.sol<br/><br/>Is Registered Borrower?<br/><br/>archController.isRegisteredBorrower()"}
+        HTCheckBorrower -- No --> HTFail
+        HTCheckBorrower -- Yes --> HTCheckTemplate{"Template<br/>Exists & Enabled?<br/><br/>hooksTemplates templateIndex enabled"}
+        HTCheckTemplate -- No --> HTFail
+        HTCheckTemplate -- Yes --> HTDeploy["Deploy hooks instance<br/><br/>deployHooksInstance()"]
+        HTDeploy --> HTConfigure["Configure with Salt<br/><br/>LibStoredInitCode.create2WithStoredInitCode()"]
+        HTConfigure --> HTSuccess
+        
+        HTType -- "Deploy Market" --> HTDeployMarket["Deploy market contract<br/><br/>deployMarket()"]
+        HTDeployMarket --> HTRegister["Register with ArchController<br/><br/>archController.registerMarket()"]
+        HTRegister --> HTSuccess
+        
+        HTType -- "Update Fee" --> HTUpdateFee["Update origination fee<br/><br/>setProtocolFeeForOriginationFeeAsset()"]
+        HTUpdateFee --> HTSuccess
+    end
+
+    subgraph "Emergency & Administrative Operations"
+        EmergencyStart(["Emergency Operation Request"])
+        EmergencyStart --> EmergencyType{"Operation<br/>Type?"}
+        
+        EmergencyType -- "Rescue Tokens" --> CheckRescueBorrower{"WildcatMarket.sol<br/><br/>Is Borrower?<br/><br/>onlyBorrower"}
+        CheckRescueBorrower -- No --> EmergencyReject["Reject Operation"]
+        CheckRescueBorrower -- Yes --> CheckTokenType{"Is Market Asset<br/>or Market Token?<br/><br/>token != asset && token != address(this)"}
+        CheckTokenType -- Yes --> EmergencyReject
+        CheckTokenType -- No --> RescueTokens["Transfer all tokens to borrower<br/><br/>LibERC20.safeTransferAll()"]
+        RescueTokens --> EmergencySuccess(["Emergency Operation Complete"])
+        
+        EmergencyType -- "Nuke From Orbit" --> CheckNukeBorrower{"WildcatMarketConfig.sol<br/><br/>Is Borrower?<br/><br/>onlyBorrower"}
+        CheckNukeBorrower -- No --> EmergencyReject
+        CheckNukeBorrower -- Yes --> CallNukeHook["Call nuke hook validation<br/><br/>hooks.onNukeFromOrbit()"]
+        CallNukeHook --> CheckSanctioned{"Address<br/>Sanctioned?<br/><br/>sentinel.isSanctioned()"}
+        CheckSanctioned -- No --> EmergencyReject
+        CheckSanctioned -- Yes --> BlockAccount["Block Account Access<br/><br/>_accounts[account].approval"]
+        BlockAccount --> ForceWithdrawQueue["Force Queue Full Withdrawal<br/><br/>_queueWithdrawal()"]
+        ForceWithdrawQueue --> EmergencySuccess
+        
+        EmergencyType -- "Block/Unblock Deposits" --> CheckACBorrower{"AccessControlHooks.sol<br/><br/>Is Borrower?<br/><br/>onlyBorrower"}
+        CheckACBorrower -- No --> EmergencyReject
+        CheckACBorrower -- Yes --> UpdateDepositAccess["Update deposit access<br/><br/>blockFromDeposits()<br/>unblockFromDeposits()"]
+        UpdateDepositAccess --> EmergencySuccess
+        
+        EmergencyType -- "Grant/Revoke Role" --> CheckRoleBorrower{"AccessControlHooks.sol<br/><br/>Is Borrower or Role Provider?<br/><br/>onlyBorrower || _roleProviders"}
+        CheckRoleBorrower -- No --> EmergencyReject
+        CheckRoleBorrower -- Yes --> UpdateCredentials["Update Lender Authorization<br/><br/>grantRole()<br/>revokeRole()"]
+        UpdateCredentials --> UpdateKnownStatus["Update isKnownLenderOnMarket<br/><br/>_updateLenderAuthorization()"]
+        UpdateKnownStatus --> EmergencySuccess
+        
+        EmergencyType -- "Override Sanctions" --> CheckSanctionsBorrower{"WildcatSanctionsSentinel.sol<br/><br/>Is Borrower?<br/><br/>onlyBorrower"}
+        CheckSanctionsBorrower -- No --> EmergencyReject
+        CheckSanctionsBorrower -- Yes --> SetOverride["Set Sanction Override<br/><br/>overrideSanction()"]
+        SetOverride --> EmergencySuccess
+        
+        EmergencyReject --> EmergencyFail(["Emergency Operation Failed"])
+    end
+
+    subgraph "Borrowing Operations"
+        BorrowStart(["Borrowing Operation"])
+        BorrowStart --> BorrowType{"Operation<br/>Type?"}
+        
+        BorrowType -- "Borrow" --> CheckBorrowBorrower{"WildcatMarket.sol<br/><br/>Is Borrower?<br/><br/>onlyBorrower"}
+        CheckBorrowBorrower -- No --> BorrowReject["Reject Borrow"]
+        CheckBorrowBorrower -- Yes --> CheckSanctions{"Borrower<br/>Sanctioned?<br/><br/>sentinel.isSanctioned()"}
+        CheckSanctions -- Yes --> BorrowReject
+        CheckSanctions -- No --> BorrowUpdateState["Get Updated State<br/><br/>_getUpdatedState()"]
+        BorrowUpdateState --> CallBorrowHook["Call borrow hook validation<br/><br/>hooks.onBorrow()"]
+        CallBorrowHook --> CheckBorrowableAssets{"Sufficient<br/>Borrowable Assets?<br/><br/>state.borrowableAssets()"}
+        CheckBorrowableAssets -- No --> BorrowReject
+        CheckBorrowableAssets -- Yes --> ExecuteBorrow["Transfer Assets to Borrower<br/><br/>asset.safeTransfer()"]
+        ExecuteBorrow --> UpdateDebtState["Update Market Debt State<br/><br/>state.scaledTotalSupply"]
+        UpdateDebtState --> BorrowWriteState["Write Market State<br/><br/>_writeState()"]
+        BorrowWriteState --> BorrowSuccess(["Borrow Complete"])
+        
+        BorrowType -- "Repay" --> RepayUpdateState["WildcatMarket.sol<br/><br/>Get Updated State<br/><br/>_getUpdatedState()"]
+        RepayUpdateState --> CallRepayHook["Call repay hook validation<br/><br/>hooks.onRepay()"]
+        CallRepayHook --> ExecuteRepay["Transfer Assets from Caller<br/><br/>asset.safeTransferFrom()"]
+        ExecuteRepay --> UpdateRepayState["Update Market State<br/><br/>state.normalizedUnclaimedWithdrawals"]
+        UpdateRepayState --> CheckDelinquency{"Still<br/>Delinquent?<br/><br/>state.liquidityRequired() > 0"}
+        CheckDelinquency -- No --> ClearDelinquency["Clear Delinquency Status<br/><br/>state.timeDelinquent = 0"]
+        CheckDelinquency -- Yes --> RepayWriteState["Write Market State<br/><br/>_writeState()"]
+        ClearDelinquency --> RepayWriteState
+        RepayWriteState --> BorrowSuccess
+        
+        BorrowReject --> BorrowFail(["Borrowing Operation Failed"])
+    end
+
+    subgraph "Sanctions Integration"
+        SanctionsStart(["Check Sanctions"])
+        SanctionsStart --> QuerySentinel["WildcatSanctionsSentinel.sol<br/><br/>Query sanctions sentinel<br/><br/>isSanctioned()"]
+        QuerySentinel --> CheckOverride{"Borrower<br/>Override Set?<br/><br/>_sanctionOverrides"}
+        CheckOverride -- Yes --> SanctionsPass(["Not Sanctioned"])
+        CheckOverride -- No --> QueryChainalysis["IChainalysisSanctionsList.sol<br/><br/>Query Chainalysis Oracle<br/><br/>chainalysisSanctionsList.isSanctioned()"]
+        QueryChainalysis --> ChainalysisResult{"Address<br/>Sanctioned?"}
+        ChainalysisResult -- No --> SanctionsPass
+        ChainalysisResult -- Yes --> CreateEscrow["WildcatSanctionsEscrow.sol<br/><br/>Create sanctions escrow<br/><br/>createEscrow()"]
+        CreateEscrow --> SanctionsFail(["Sanctioned - Assets Escrowed"])
+    end

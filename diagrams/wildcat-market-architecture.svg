@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1200">
+  <defs>
+    <style>
+      .title { font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; }
+      .section-title { font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; }
+      .contract { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 3; }
+      .library { fill: #E3F2FD; stroke: #2196F3; stroke-width: 2; }
+      .storage { fill: #FFF3E0; stroke: #FF9800; stroke-width: 2; }
+      .external { fill: #F3E5F5; stroke: #9C27B0; stroke-width: 2; }
+      .interface { fill: #FFEBEE; stroke: #F44336; stroke-width: 2; stroke-dasharray: 5,5; }
+      .text { font-family: Arial, sans-serif; font-size: 14px; text-anchor: middle; }
+      .small-text { font-family: Arial, sans-serif; font-size: 12px; text-anchor: middle; }
+      .tiny-text { font-family: Arial, sans-serif; font-size: 10px; text-anchor: start; }
+      .inheritance { fill: none; stroke: #4CAF50; stroke-width: 3; }
+      .uses { fill: none; stroke: #2196F3; stroke-width: 2; stroke-dasharray: 3,3; }
+      .data-flow { fill: none; stroke: #FF9800; stroke-width: 2; }
+    </style>
+    <marker id="inheritance-arrow" markerWidth="15" markerHeight="15" refX="14" refY="7.5" orient="auto">
+      <polygon points="0 0, 15 7.5, 0 15" fill="none" stroke="#4CAF50" stroke-width="2"/>
+    </marker>
+    <marker id="uses-arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#2196F3"/>
+    </marker>
+    <marker id="data-arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#FF9800"/>
+    </marker>
+  </defs>
+  
+  <!-- Title -->
+  <text x="800" y="40" class="title">Wildcat Market - Internal Architecture</text>
+  
+  <!-- Core Market Contract -->
+  <g id="wildcat-market">
+    <rect x="600" y="100" width="400" height="100" class="contract" rx="5"/>
+    <text x="800" y="130" class="text" font-weight="bold">WildcatMarket</text>
+    <text x="800" y="150" class="small-text">Main Market Contract</text>
+    <text x="800" y="170" class="small-text">• Inherits all market functionality</text>
+    <text x="800" y="185" class="small-text">• Entry point for all interactions</text>
+  </g>
+  
+  <!-- Market Components -->
+  <g id="market-base">
+    <rect x="50" y="300" width="300" height="200" class="contract" rx="5"/>
+    <text x="200" y="330" class="text" font-weight="bold">WildcatMarketBase</text>
+    <text x="200" y="350" class="small-text">Core Market Logic</text>
+    <text x="60" y="375" class="tiny-text">• constructor()</text>
+    <text x="60" y="395" class="tiny-text">• _getUpdatedState()</text>
+    <text x="60" y="415" class="tiny-text">• _writeState()</text>
+    <text x="60" y="435" class="tiny-text">• depositUpTo()</text>
+    <text x="60" y="455" class="tiny-text">• borrow()</text>
+    <text x="60" y="475" class="tiny-text">• closeMarket()</text>
+    <text x="60" y="495" class="tiny-text">• State update mechanics</text>
+  </g>
+  
+  <g id="market-config">
+    <rect x="400" y="300" width="300" height="200" class="contract" rx="5"/>
+    <text x="550" y="330" class="text" font-weight="bold">WildcatMarketConfig</text>
+    <text x="550" y="350" class="small-text">Configuration Management</text>
+    <text x="410" y="375" class="tiny-text">• setMaxTotalSupply()</text>
+    <text x="410" y="395" class="tiny-text">• setAnnualInterestAndReserveRatioBips()</text>
+    <text x="410" y="415" class="tiny-text">• setProtocolFeeBips()</text>
+    <text x="410" y="435" class="tiny-text">• nukeFromOrbit() - borrower removal</text>
+    <text x="410" y="455" class="tiny-text">• stunningReversal() - borrower restore</text>
+    <text x="410" y="475" class="tiny-text">• Parameter validation</text>
+    <text x="410" y="495" class="tiny-text">• Hook interactions for config</text>
+  </g>
+  
+  <g id="market-token">
+    <rect x="750" y="300" width="300" height="200" class="contract" rx="5"/>
+    <text x="900" y="330" class="text" font-weight="bold">WildcatMarketToken</text>
+    <text x="900" y="350" class="small-text">ERC20 Implementation</text>
+    <text x="760" y="375" class="tiny-text">• balanceOf()</text>
+    <text x="760" y="395" class="tiny-text">• totalSupply()</text>
+    <text x="760" y="415" class="tiny-text">• transfer()</text>
+    <text x="760" y="435" class="tiny-text">• approve() / transferFrom()</text>
+    <text x="760" y="455" class="tiny-text">• _getAccountWithRole()</text>
+    <text x="760" y="475" class="tiny-text">• Scale factor adjustments</text>
+    <text x="760" y="495" class="tiny-text">• Hook calls for transfers</text>
+  </g>
+  
+  <g id="market-withdrawals">
+    <rect x="1100" y="300" width="300" height="200" class="contract" rx="5"/>
+    <text x="1250" y="330" class="text" font-weight="bold">WildcatMarketWithdrawals</text>
+    <text x="1250" y="350" class="small-text">Withdrawal Processing</text>
+    <text x="1110" y="375" class="tiny-text">• queueWithdrawal()</text>
+    <text x="1110" y="395" class="tiny-text">• executeWithdrawal()</text>
+    <text x="1110" y="415" class="tiny-text">• executeWithdrawalForBatch()</text>
+    <text x="1110" y="435" class="tiny-text">• getWithdrawalBatch()</text>
+    <text x="1110" y="455" class="tiny-text">• getAccountWithdrawalStatus()</text>
+    <text x="1110" y="475" class="tiny-text">• FIFO batch management</text>
+    <text x="1110" y="495" class="tiny-text">• Pro-rata distribution</text>
+  </g>
+  
+  <!-- Storage Structure -->
+  <g id="storage">
+    <rect x="50" y="600" width="400" height="250" class="storage" rx="5"/>
+    <text x="250" y="630" class="text" font-weight="bold">Market State Storage</text>
+    <text x="60" y="655" class="tiny-text">MarketState struct:</text>
+    <text x="70" y="675" class="tiny-text">• isClosed: bool</text>
+    <text x="70" y="695" class="tiny-text">• maxTotalSupply: uint128</text>
+    <text x="70" y="715" class="tiny-text">• accruedProtocolFees: uint128</text>
+    <text x="70" y="735" class="tiny-text">• normalizedUnclaimedWithdrawals: uint128</text>
+    <text x="70" y="755" class="tiny-text">• scaledTotalSupply: uint128</text>
+    <text x="70" y="775" class="tiny-text">• scaledPendingWithdrawals: uint128</text>
+    <text x="70" y="795" class="tiny-text">• pendingWithdrawalExpiry: uint32</text>
+    <text x="70" y="815" class="tiny-text">• isDelinquent: bool</text>
+    <text x="70" y="835" class="tiny-text">• timeDelinquent: uint32</text>
+    <text x="250" y="675" class="tiny-text">• reserveRatioBips: uint16</text>
+    <text x="250" y="695" class="tiny-text">• annualInterestBips: uint16</text>
+    <text x="250" y="715" class="tiny-text">• liquidityRequired: uint256</text>
+    <text x="250" y="735" class="tiny-text">• lastInterestAccruedTimestamp: uint32</text>
+    <text x="250" y="755" class="tiny-text">• scaleFactor: uint112</text>
+    <text x="250" y="775" class="tiny-text">• lastKnownLiquidity: uint128</text>
+    <text x="250" y="795" class="tiny-text">• withdrawalBatchDuration: uint32</text>
+    <text x="250" y="815" class="tiny-text">• __placeholder__: uint192</text>
+  </g>
+  
+  <!-- Libraries -->
+  <g id="libraries">
+    <rect x="500" y="600" width="200" height="250" class="library" rx="5"/>
+    <text x="600" y="630" class="text" font-weight="bold">Core Libraries</text>
+    <text x="510" y="660" class="tiny-text">MarketState:</text>
+    <text x="520" y="680" class="tiny-text">• totalSupply()</text>
+    <text x="520" y="700" class="tiny-text">• maximumDeposit()</text>
+    <text x="520" y="720" class="tiny-text">• borrowableAssets()</text>
+    <text x="520" y="740" class="tiny-text">• hasPendingExpiredBatch()</text>
+    <text x="520" y="760" class="tiny-text">• updateScaleFactorAndFees()</text>
+    <text x="510" y="785" class="tiny-text">FeeMath:</text>
+    <text x="520" y="805" class="tiny-text">• calculateLinearInterest()</text>
+    <text x="520" y="825" class="tiny-text">• updateProtocolFees()</text>
+    <text x="520" y="845" class="tiny-text">• applyProtocolFee()</text>
+  </g>
+  
+  <g id="more-libraries">
+    <rect x="750" y="600" width="200" height="250" class="library" rx="5"/>
+    <text x="850" y="630" class="text" font-weight="bold">Utility Libraries</text>
+    <text x="760" y="660" class="tiny-text">Withdrawal:</text>
+    <text x="770" y="680" class="tiny-text">• getWithdrawalBatch()</text>
+    <text x="770" y="700" class="tiny-text">• processUnpaidBatch()</text>
+    <text x="770" y="720" class="tiny-text">• calculateBatchProRata()</text>
+    <text x="760" y="745" class="tiny-text">FIFOQueue:</text>
+    <text x="770" y="765" class="tiny-text">• push() / shift()</text>
+    <text x="770" y="785" class="tiny-text">• peek() operations</text>
+    <text x="760" y="810" class="tiny-text">SafeCastLib:</text>
+    <text x="770" y="830" class="tiny-text">• Safe type conversions</text>
+  </g>
+  
+  <!-- External Dependencies -->
+  <g id="external">
+    <rect x="1000" y="600" width="200" height="120" class="external" rx="5"/>
+    <text x="1100" y="630" class="text" font-weight="bold">External Calls</text>
+    <text x="1100" y="655" class="small-text">Hooks Contract</text>
+    <text x="1010" y="675" class="tiny-text">• All hook functions</text>
+    <text x="1010" y="695" class="tiny-text">• Access control</text>
+    <text x="1010" y="715" class="tiny-text">• Parameter validation</text>
+    
+    <rect x="1000" y="730" width="200" height="120" class="external" rx="5"/>
+    <text x="1100" y="760" class="text" font-weight="bold">Sentinel</text>
+    <text x="1100" y="780" class="small-text">Sanctions Checking</text>
+    <text x="1010" y="800" class="tiny-text">• createEscrow()</text>
+    <text x="1010" y="820" class="tiny-text">• isSanctioned()</text>
+    <text x="1010" y="840" class="tiny-text">• Escrow management</text>
+  </g>
+  
+  <!-- Key Features -->
+  <g id="features">
+    <rect x="1250" y="600" width="300" height="250" class="interface" rx="5"/>
+    <text x="1400" y="630" class="text" font-weight="bold">Key Features</text>
+    <text x="1260" y="660" class="tiny-text">Scale Factor System:</text>
+    <text x="1270" y="680" class="tiny-text">• Rebasing token support</text>
+    <text x="1270" y="700" class="tiny-text">• Efficient interest accrual</text>
+    <text x="1260" y="725" class="tiny-text">Withdrawal Batches:</text>
+    <text x="1270" y="745" class="tiny-text">• 24-hour cycles</text>
+    <text x="1270" y="765" class="tiny-text">• Pro-rata distribution</text>
+    <text x="1270" y="785" class="tiny-text">• Sanctions handling</text>
+    <text x="1260" y="810" class="tiny-text">Gas Optimizations:</text>
+    <text x="1270" y="830" class="tiny-text">• Custom encoding</text>
+    <text x="1270" y="845" class="tiny-text">• Transient storage</text>
+  </g>
+  
+  <!-- Inheritance arrows -->
+  <path d="M 800 200 L 200 300" class="inheritance" marker-end="url(#inheritance-arrow)"/>
+  <path d="M 800 200 L 550 300" class="inheritance" marker-end="url(#inheritance-arrow)"/>
+  <path d="M 800 200 L 900 300" class="inheritance" marker-end="url(#inheritance-arrow)"/>
+  <path d="M 800 200 L 1250 300" class="inheritance" marker-end="url(#inheritance-arrow)"/>
+  
+  <!-- Library usage arrows -->
+  <path d="M 200 500 L 600 600" class="uses" marker-end="url(#uses-arrow)"/>
+  <path d="M 550 500 L 600 600" class="uses" marker-end="url(#uses-arrow)"/>
+  <path d="M 900 500 L 850 600" class="uses" marker-end="url(#uses-arrow)"/>
+  <path d="M 1250 500 L 850 600" class="uses" marker-end="url(#uses-arrow)"/>
+  
+  <!-- Data flow arrows -->
+  <path d="M 250 600 L 250 500" class="data-flow" marker-end="url(#data-arrow)"/>
+  <path d="M 200 500 L 200 600" class="data-flow" stroke-dasharray="none"/>
+  
+  <!-- External calls -->
+  <path d="M 1000 400 L 1000 600" class="uses" marker-end="url(#uses-arrow)"/>
+  <path d="M 1100 500 L 1100 730" class="uses" marker-end="url(#uses-arrow)"/>
+  
+  <!-- Legend -->
+  <g id="legend" transform="translate(50, 950)">
+    <text x="0" y="0" class="section-title">Legend</text>
+    
+    <line x1="0" y1="30" x2="40" y2="30" class="inheritance" marker-end="url(#inheritance-arrow)"/>
+    <text x="50" y="35" class="small-text" text-anchor="start">Inheritance</text>
+    
+    <line x1="0" y1="60" x2="40" y2="60" class="uses" marker-end="url(#uses-arrow)"/>
+    <text x="50" y="65" class="small-text" text-anchor="start">Uses Library</text>
+    
+    <line x1="0" y1="90" x2="40" y2="90" class="data-flow" marker-end="url(#data-arrow)"/>
+    <text x="50" y="95" class="small-text" text-anchor="start">Data Flow</text>
+    
+    <rect x="150" y="20" width="40" height="20" class="contract"/>
+    <text x="200" y="35" class="small-text" text-anchor="start">Contract</text>
+    
+    <rect x="150" y="50" width="40" height="20" class="library"/>
+    <text x="200" y="65" class="small-text" text-anchor="start">Library</text>
+    
+    <rect x="150" y="80" width="40" height="20" class="storage"/>
+    <text x="200" y="95" class="small-text" text-anchor="start">Storage</text>
+  </g>
+  
+  <!-- Notes -->
+  <g id="notes" transform="translate(400, 950)">
+    <rect x="0" y="0" width="800" height="120" fill="#F5F5F5" stroke="#999" stroke-width="1" rx="5"/>
+    <text x="400" y="25" class="section-title" text-anchor="middle">Architecture Notes</text>
+    <text x="10" y="50" class="small-text" text-anchor="start">• WildcatMarket inherits all four component contracts to create the complete market implementation</text>
+    <text x="10" y="70" class="small-text" text-anchor="start">• State is stored in a single packed struct for gas efficiency (MarketState)</text>
+    <text x="10" y="90" class="small-text" text-anchor="start">• Libraries contain pure functions that operate on state, keeping contracts slim</text>
+    <text x="10" y="110" class="small-text" text-anchor="start">• All external calls go through hooks or sentinel for modularity and security</text>
+  </g>
+</svg>
